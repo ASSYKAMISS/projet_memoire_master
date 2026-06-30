@@ -1,0 +1,279 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Créer un utilisateur - ChainSign AI{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-person-plus-fill text-primary me-2"></i>
+                {% if can_choose_role %}Créer un utilisateur{% else %}Créer un agent{% endif %}
+            </h2>
+            <p class="text-muted mb-0">
+                {% if can_choose_role %}
+                    Ajoutez un responsable ou un agent.
+                {% else %}
+                    Ajoutez un agent et affectez-le à l'un de vos départements.
+                {% endif %}
+            </p>
+        </div>
+
+        <a href="{% url 'user_management' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Retour
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-4">
+            <div class="info-card h-100">
+                <div class="icon-large">
+                    <i class="bi bi-person-workspace"></i>
+                </div>
+
+                <h4 class="fw-bold mt-4">Nouveau compte</h4>
+
+                <p class="text-muted">
+                    Les responsables créent leurs départements, puis ajoutent des agents dans ces départements.
+                </p>
+
+                <div class="security-list mt-4">
+                    <div>
+                        <i class="bi bi-check-circle-fill"></i>
+                        Responsable sans département obligatoire
+                    </div>
+                    <div>
+                        <i class="bi bi-check-circle-fill"></i>
+                        Agent affecté à un département
+                    </div>
+                    <div>
+                        <i class="bi bi-check-circle-fill"></i>
+                        Accès aux documents attribués
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="form-card">
+
+                <div class="card-title-box mb-4">
+                    <div class="icon-box">
+                        <i class="bi bi-person-plus"></i>
+                    </div>
+
+                    <div>
+                        <h5 class="fw-bold mb-1">Informations du compte</h5>
+                        <p class="text-muted mb-0 small">
+                            Complétez les informations nécessaires.
+                        </p>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Prénom</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-person"></i>
+                            <input type="text" name="first_name" class="form-control custom-input" placeholder="Prénom" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nom</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-person-badge"></i>
+                            <input type="text" name="last_name" class="form-control custom-input" placeholder="Nom" required>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Adresse email</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-envelope"></i>
+                            <input type="email" name="email" class="form-control custom-input" placeholder="utilisateur@email.com" required>
+                        </div>
+                    </div>
+
+                    {% if can_choose_role %}
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Rôle</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-person-gear"></i>
+                            <select id="roleSelect" name="role" class="form-control custom-input" required>
+                                <option value="AGENT">Agent</option>
+                                <option value="RESPONSABLE">Responsable</option>
+                            </select>
+                        </div>
+                    </div>
+                    {% else %}
+                        <input type="hidden" id="roleSelect" name="role" value="AGENT">
+                    {% endif %}
+
+                    <div class="mb-4" id="departmentField">
+                        <label class="form-label fw-semibold">Département</label>
+                        <div class="input-group-custom">
+                            <i class="bi bi-building"></i>
+                            <select id="departmentSelect" name="departement" class="form-control custom-input">
+                                <option value="">Sélectionner un département</option>
+                                {% for departement in departements %}
+                                    <option value="{{ departement.id }}">{{ departement.nom }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <small class="text-muted">Obligatoire seulement pour les agents.</small>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 btn-create">
+                        <i class="bi bi-person-plus-fill me-2"></i>
+                        Créer le compte
+                    </button>
+                </form>
+
+                <div class="info-box">
+                    <i class="bi bi-info-circle-fill text-primary me-2"></i>
+                    Mot de passe par défaut : <strong>Agent@2026</strong>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+.info-card,
+.form-card {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 22px;
+    padding: 28px;
+    box-shadow: 0 12px 35px rgba(9,30,66,.06);
+}
+
+.icon-large {
+    width: 76px;
+    height: 76px;
+    border-radius: 24px;
+    background: #EAF2FF;
+    color: #0057D9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+.security-list {
+    display: flex;
+    flex-direction: column;
+    gap: 13px;
+}
+
+.security-list div {
+    background: #F8FBFF;
+    border: 1px solid #E4EBF5;
+    border-radius: 14px;
+    padding: 13px 15px;
+    font-weight: 600;
+    color: #334155;
+}
+
+.security-list i {
+    color: #15803D;
+    margin-right: 8px;
+}
+
+.card-title-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: #EAF2FF;
+    color: #0057D9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+.input-group-custom {
+    position: relative;
+}
+
+.input-group-custom i {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #0057D9;
+    font-size: 18px;
+    z-index: 2;
+}
+
+.custom-input {
+    height: 54px;
+    border-radius: 14px;
+    border: 1px solid #DDE7F5;
+    padding-left: 48px;
+    font-weight: 500;
+    background-color: white;
+}
+
+.custom-input:focus {
+    border-color: #0057D9;
+    box-shadow: 0 0 0 .18rem rgba(0, 87, 217, .12);
+}
+
+select.custom-input {
+    appearance: auto;
+}
+
+.btn-create {
+    height: 52px;
+    border-radius: 14px;
+    font-weight: 800;
+}
+
+.info-box {
+    margin-top: 22px;
+    background: #F8FBFF;
+    border: 1px solid #E4EBF5;
+    border-radius: 16px;
+    padding: 16px;
+    text-align: center;
+    color: #64748B;
+    font-weight: 600;
+}
+</style>
+
+<script>
+    const roleSelect = document.getElementById('roleSelect');
+    const departmentSelect = document.getElementById('departmentSelect');
+    const departmentField = document.getElementById('departmentField');
+
+    function syncDepartmentRequirement() {
+        const isAgent = roleSelect.value === 'AGENT';
+        departmentSelect.required = isAgent;
+        departmentField.style.display = isAgent ? 'block' : 'none';
+        if (!isAgent) {
+            departmentSelect.value = '';
+        }
+    }
+
+    roleSelect.addEventListener('change', syncDepartmentRequirement);
+    syncDepartmentRequirement();
+</script>
+
+{% endblock %}

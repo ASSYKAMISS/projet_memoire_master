@@ -1,0 +1,485 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}ChainSign AI{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #0057D9;
+            --primary-dark: #071B3A;
+            --bg: #F5F8FC;
+            --border: #E4EBF5;
+            --text: #0F172A;
+            --muted: #64748B;
+            --danger: #DC2626;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            font-family: 'Segoe UI', sans-serif;
+            color: var(--text);
+        }
+
+        .app-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 270px;
+            background: #fff;
+            border-right: 1px solid var(--border);
+            position: fixed;
+            inset: 0 auto 0 0;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            transition: all .3s ease;
+        }
+
+        .app-layout.collapsed .sidebar {
+            width: 86px;
+        }
+
+        .logo-box {
+            height: 105px;
+            display: flex;
+            align-items: center;
+            padding: 0 22px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .logo-main {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo-circle {
+            width: 52px;
+            height: 52px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #0057D9, #0B6CFF);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            flex-shrink: 0;
+            box-shadow: 0 12px 25px rgba(0, 87, 217, .25);
+        }
+
+        .logo-text strong {
+            display: block;
+            font-size: 1.25rem;
+            font-weight: 900;
+            color: var(--primary-dark);
+        }
+
+        .logo-text span {
+            color: var(--muted);
+            font-size: .82rem;
+            font-weight: 600;
+        }
+
+        .app-layout.collapsed .logo-text,
+        .app-layout.collapsed .sidebar-menu span,
+        .app-layout.collapsed .secure-box span,
+        .app-layout.collapsed .logout-link span {
+            display: none;
+        }
+
+        .sidebar-menu {
+            padding: 22px 14px;
+            flex: 1;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            color: #475569;
+            text-decoration: none;
+            border-radius: 15px;
+            font-weight: 700;
+            transition: .25s;
+        }
+
+       .sidebar-menu a:hover,
+.sidebar-menu a.active {
+    background: #EEF5FF;
+    color: var(--primary);
+}
+
+        .sidebar-menu i {
+            font-size: 21px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 18px;
+            border-top: 1px solid var(--border);
+        }
+
+        .secure-box {
+            background: linear-gradient(135deg, #EEF5FF, #fff);
+            border: 1px solid #CFE0FF;
+            color: var(--primary);
+            padding: 12px 14px;
+            border-radius: 16px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
+        .logout-link {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--danger);
+            text-decoration: none;
+            font-weight: 800;
+            padding: 10px 12px;
+            border-radius: 14px;
+        }
+
+        .logout-link:hover {
+            background: #FEE2E2;
+            color: #B91C1C;
+        }
+
+        .main-area {
+            margin-left: 270px;
+            width: calc(100% - 270px);
+            transition: all .3s ease;
+        }
+
+        .app-layout.collapsed .main-area {
+            margin-left: 86px;
+            width: calc(100% - 86px);
+        }
+
+        .topbar {
+            height: 84px;
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 34px;
+            position: sticky;
+            top: 0;
+            z-index: 900;
+        }
+
+        .sidebar-toggle {
+            width: 44px;
+            height: 44px;
+            border: 1px solid var(--border);
+            background: #F8FBFF;
+            color: var(--primary);
+            border-radius: 14px;
+            font-size: 24px;
+        }
+
+        .sidebar-toggle:hover {
+            background: #EEF5FF;
+        }
+
+        .topbar-title h4 {
+            margin: 0;
+            font-weight: 900;
+            color: var(--primary-dark);
+        }
+
+        .topbar-title small {
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .user-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #F8FBFF;
+            border: 1px solid var(--border);
+            padding: 8px 14px;
+            border-radius: 18px;
+        }
+
+        .user-avatar {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, #0057D9, #0B6CFF);
+            color: white;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+        }
+
+        .user-info strong {
+            display: block;
+            font-size: .95rem;
+        }
+
+        .user-info small {
+            color: var(--muted);
+            font-size: .78rem;
+        }
+
+        .page-content {
+            padding: 34px;
+        }
+
+        .card,
+        .page-card,
+        .metric-card,
+        .dashboard-card {
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            box-shadow: 0 12px 35px rgba(9, 30, 66, .06);
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            border-color: var(--primary);
+            border-radius: 12px;
+            font-weight: 800;
+        }
+
+        .btn-outline-primary {
+            border-radius: 12px;
+            font-weight: 800;
+        }
+        .sidebar-menu a.active {
+    background: linear-gradient(135deg, #0057D9, #0B6CFF);
+    color: white;
+    box-shadow: 0 8px 20px rgba(0, 87, 217, 0.25);
+}
+
+.sidebar-menu a.active i {
+    color: white;
+}
+
+.sidebar-menu a.active span {
+    color: white;
+}
+
+        @media(max-width: 992px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+
+            .app-layout.mobile-open .sidebar {
+                transform: translateX(0);
+            }
+
+            .main-area,
+            .app-layout.collapsed .main-area {
+                margin-left: 0;
+                width: 100%;
+            }
+
+            .page-content {
+                padding: 22px;
+            }
+
+            .topbar {
+                padding: 0 18px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="app-layout" id="appLayout">
+
+    <aside class="sidebar">
+        <div class="logo-box">
+            <div class="logo-main">
+                <div class="logo-circle">
+                    <i class="bi bi-shield-check"></i>
+                </div>
+
+                <div class="logo-text">
+                    <strong>ChainSign</strong>
+                    <span>AI Platform</span>
+                </div>
+            </div>
+        </div>
+
+       <nav class="sidebar-menu">
+
+    <a href="{% url 'dashboard' %}"
+       class="{% if active_page == 'dashboard' %}active{% endif %}">
+        <i class="bi bi-grid"></i>
+        <span>Tableau de bord</span>
+    </a>
+
+    <a href="{% url 'upload_document' %}"
+       class="{% if active_page == 'upload' %}active{% endif %}">
+        <i class="bi bi-plus-circle"></i>
+        <span>Nouveau document</span>
+    </a>
+    {% if request.user.profil.role == 'AGENT' %}
+<a href="{% url 'documents_to_sign' %}"
+   class="{% if active_page == 'to_sign' %}active{% endif %}">
+    <i class="bi bi-pen"></i>
+    <span>Documents à signer</span>
+</a>
+{% endif %}
+
+    <a href="{% url 'document_list' %}"
+       class="{% if active_page == 'documents' %}active{% endif %}">
+        <i class="bi bi-folder"></i>
+        <span>Mes documents</span>
+    </a>
+
+    <a href="{% url 'verify_document' %}"
+       class="{% if active_page == 'verification' %}active{% endif %}">
+        <i class="bi bi-patch-check"></i>
+        <span>Vérification</span>
+    </a>
+
+    <a href="{% url 'blockchain_audit' %}"
+       class="{% if active_page == 'blockchain' %}active{% endif %}">
+        <i class="bi bi-box"></i>
+        <span>Audit Blockchain</span>
+    </a>
+
+    <a href="{% url 'operation_history' %}"
+       class="{% if active_page == 'history' %}active{% endif %}">
+        <i class="bi bi-clock-history"></i>
+        <span>Historique</span>
+    </a>
+   {% if user.is_superuser or user.profil.role == 'RESPONSABLE' %}
+    <a href="{% url 'user_management' %}"
+       class="{% if active_page == 'users' %}active{% endif %}">
+        <i class="bi bi-people"></i>
+        <span>Utilisateurs</span>
+    </a>
+    <a href="{% url 'departments' %}"
+       class="{% if active_page == 'departements' %}active{% endif %}">
+        <i class="bi bi-building"></i>
+        <span>Départements</span>
+    </a>
+
+    <a href="{% url 'create_user' %}"
+       class="{% if active_page == 'create_user' %}active{% endif %}">
+        <i class="bi bi-person-plus"></i>
+        <span>{% if user.is_superuser %}Créer utilisateur{% else %}Créer agent{% endif %}</span>
+    </a>
+{% endif %}
+
+</nav>
+
+        <div class="sidebar-footer">
+            <div class="secure-box">
+                <i class="bi bi-shield-lock"></i>
+                <span>Espace sécurisé</span>
+            </div>
+
+            {% if user.is_authenticated %}
+                <a href="{% url 'logout' %}" class="logout-link">
+                    <i class="bi bi-box-arrow-left"></i>
+                    <span>Déconnexion</span>
+                </a>
+            {% else %}
+                <a href="{% url 'login' %}" class="logout-link">
+                    <i class="bi bi-box-arrow-in-right"></i>
+                    <span>Connexion</span>
+                </a>
+            {% endif %}
+        </div>
+    </aside>
+
+    <main class="main-area">
+
+        <header class="topbar">
+            <div class="d-flex align-items-center gap-3">
+                <button class="sidebar-toggle" type="button" onclick="toggleSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+
+                <div class="topbar-title">
+                    <h4>{% block page_title %}ChainSign AI{% endblock %}</h4>
+                    <small>{% block page_subtitle %}Signature électronique, blockchain et IA{% endblock %}</small>
+                </div>
+            </div>
+
+            {% if user.is_authenticated %}
+            <div class="user-box">
+                <div class="user-avatar">
+                    {{ user.username|first|upper }}
+                </div>
+
+                <div class="user-info">
+                    <strong>{{ user.first_name|default:user.username }}</strong>
+                    <small>
+                        {% if user.is_superuser %}
+                            Administrateur
+                        {% elif user.profil.role == 'RESPONSABLE' %}
+                            Responsable
+                        {% elif user.profil.role == 'AGENT' %}
+                            Agent
+                        {% else %}
+                            Utilisateur
+                        {% endif %}
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+        </header>
+
+        <section class="page-content">
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            {% block content %}
+            {% endblock %}
+
+        </section>
+
+    </main>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    function toggleSidebar() {
+        const layout = document.getElementById('appLayout');
+
+        if (window.innerWidth <= 992) {
+            layout.classList.toggle('mobile-open');
+        } else {
+            layout.classList.toggle('collapsed');
+        }
+    }
+</script>
+
+</body>
+</html>
+
+

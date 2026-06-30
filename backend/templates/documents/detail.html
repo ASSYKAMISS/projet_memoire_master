@@ -1,0 +1,132 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}DÃ©tail du document - SignTrust AI{% endblock %}
+
+{% block content %}
+
+<div class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">DÃ©tail du document</h2>
+            <p class="text-muted">Informations techniques et Ã©tat de sÃ©curitÃ© du document.</p>
+        </div>
+
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+            Retour au tableau de bord
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold mb-0">
+                        <i class="bi bi-file-earmark-pdf text-danger"></i>
+                        {{ document.titre }}
+                    </h5>
+                </div>
+
+                <div class="card-body">
+
+                    <p>
+                        <strong>Statut :</strong>
+                        {% if document.statut == 'SIGNE' %}
+                            <span class="badge bg-success">SignÃ©</span>
+                        {% elif document.statut == 'INVALIDE' %}
+                            <span class="badge bg-danger">Invalide</span>
+                        {% elif document.statut == 'VERIFIE' %}
+                            <span class="badge bg-info">VÃ©rifiÃ©</span>
+                        {% else %}
+                            <span class="badge bg-secondary">Brouillon</span>
+                        {% endif %}
+                    </p>
+
+                    <p>
+                        <strong>Date dâ€™ajout :</strong>
+                        {{ document.date_upload|date:"d/m/Y H:i" }}
+                    </p>
+
+                    <p>
+                        <strong>Fichier original :</strong>
+                        <a href="{{ document.fichier_original.url }}" target="_blank">
+                            Ouvrir le PDF
+                        </a>
+                    </p>
+
+                    {% if document.fichier_signe %}
+                    <p>
+                        <strong>Fichier signÃ© :</strong>
+                        <a href="{{ document.fichier_signe.url }}" target="_blank">
+                            Ouvrir le PDF signÃ©
+                        </a>
+                    </p>
+                    {% endif %}
+
+                    <hr>
+
+                    <h6 class="fw-bold">Empreinte SHA-256 originale</h6>
+                    <div class="bg-light p-3 rounded">
+                        <code style="word-break: break-all;">
+                            {{ document.hash_original }}
+                        </code>
+                    </div>
+
+                    {% if document.hash_signe %}
+                    <h6 class="fw-bold mt-4">Empreinte SHA-256 du PDF signÃ©</h6>
+                    <div class="bg-light p-3 rounded">
+                        <code style="word-break: break-all;">
+                            {{ document.hash_signe }}
+                        </code>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="fw-bold">Actions</h5>
+
+                    <a href="#" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-pen"></i> Signer le document
+                    </a>
+
+                    <a href="#" class="btn btn-success w-100 mb-2">
+                        <i class="bi bi-shield-check"></i> VÃ©rifier le document
+                    </a>
+
+                    <a href="#" class="btn btn-outline-dark w-100 mb-2">
+                        <i class="bi bi-link-45deg"></i> Voir audit blockchain
+                    </a>
+
+                    <a href="#" class="btn btn-outline-danger w-100">
+                        <i class="bi bi-cpu"></i> Score IA
+                    </a>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm">
+                <div class="card-body">
+                    <h6 class="fw-bold">RÃ©sumÃ© sÃ©curitÃ©</h6>
+                    <p class="text-muted small mb-1">Hash SHA-256 gÃ©nÃ©rÃ©</p>
+                    <span class="badge bg-success">Disponible</span>
+
+                    <p class="text-muted small mt-3 mb-1">Signature numÃ©rique</p>
+                    <span class="badge bg-secondary">Non encore signÃ©e</span>
+
+                    <p class="text-muted small mt-3 mb-1">Blockchain</p>
+                    <span class="badge bg-secondary">Non enregistrÃ©e</span>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,49 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-920b1b201f278e08d930e587a05b36f2373b5f1c",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.9.0"
+  },
+  "userSourceNameMap": {
+    "contracts/DocumentRegistry.sol": "project/contracts/DocumentRegistry.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/DocumentRegistry.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.28;\n\ncontract DocumentRegistry {\n    struct Proof {\n        uint256 documentId;\n        string hashDocument;\n        string signatureNumerique;\n        string clePublique;\n        string signataire;\n        uint256 timestamp;\n        bool exists;\n    }\n\n    mapping(uint256 => Proof) private proofs;\n\n    event ProofRegistered(\n        uint256 indexed documentId,\n        string hashDocument,\n        string signataire,\n        uint256 timestamp\n    );\n\n    function registerProof(\n        uint256 documentId,\n        string memory hashDocument,\n        string memory signatureNumerique,\n        string memory clePublique,\n        string memory signataire\n    ) public {\n        require(documentId > 0, \"DocumentRegistry: invalid document id\");\n        require(bytes(hashDocument).length > 0, \"DocumentRegistry: empty hash\");\n        require(!proofs[documentId].exists, \"DocumentRegistry: proof already exists\");\n\n        proofs[documentId] = Proof({\n            documentId: documentId,\n            hashDocument: hashDocument,\n            signatureNumerique: signatureNumerique,\n            clePublique: clePublique,\n            signataire: signataire,\n            timestamp: block.timestamp,\n            exists: true\n        });\n\n        emit ProofRegistered(\n            documentId,\n            hashDocument,\n            signataire,\n            block.timestamp\n        );\n    }\n\n    function getProof(uint256 documentId) public view returns (Proof memory) {\n        require(proofs[documentId].exists, \"DocumentRegistry: proof not found\");\n        return proofs[documentId];\n    }\n\n    function proofExists(uint256 documentId) public view returns (bool) {\n        return proofs[documentId].exists;\n    }\n}"
+      }
+    }
+  }
+}

@@ -1,0 +1,314 @@
+{% extends 'base.html' %}
+
+{% block title %}Vérification PDF - ChainSign AI{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-patch-check text-primary me-2"></i>
+                Vérification d’un document
+            </h2>
+            <p class="text-muted mb-0">
+                Vérifiez l’intégrité, la signature numérique, la trace blockchain et le score IA d’un PDF.
+            </p>
+        </div>
+
+        <a href="{% url 'document_list' %}" class="btn btn-outline-primary">
+            <i class="bi bi-folder2-open me-2"></i>
+            Mes documents
+        </a>
+    </div>
+
+    <div class="row g-4">
+
+        <div class="col-lg-5">
+            <div class="verify-card h-100">
+                <h5 class="fw-bold mb-3">Téléverser un PDF à vérifier</h5>
+
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="verify-upload">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                        <h5>Déposez le PDF ici</h5>
+                        <p>Le système recalculera automatiquement son hash SHA-256.</p>
+
+                        <input type="file" id="verifyPdf" name="pdf_file" accept="application/pdf" required>
+                        <label for="verifyPdf" class="btn btn-outline-primary">
+                            Choisir un fichier
+                        </label>
+                    </div>
+
+                    <div id="verifyPreview" class="file-preview d-none mt-3">
+                        <div class="pdf-badge">PDF</div>
+                        <div>
+                            <strong id="verifyFileName">document.pdf</strong>
+                            <small id="verifyFileSize">0 MB</small>
+                        </div>
+                        <span class="valid-file">
+                            <i class="bi bi-check-circle-fill"></i> Prêt
+                        </span>
+                    </div>
+
+                    <div class="mt-4">
+                        <label class="form-label fw-semibold">Hash ou identifiant du document signé</label>
+                        <input type="text" class="form-control" name="reference"
+                               placeholder="Exemple : hash SHA-256 ou ID document">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 mt-4">
+                        <i class="bi bi-search me-2"></i>
+                        Lancer la vérification
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="verify-card h-100">
+                <div class="result-header">
+                    <div>
+                        <h5 class="fw-bold mb-1">Résultat de vérification</h5>
+                        <p class="text-muted mb-0">Résumé de l’analyse cryptographique, blockchain et IA.</p>
+                    </div>
+                    <span class="status-pill waiting">En attente</span>
+                </div>
+
+                <div class="audit-grid mt-4">
+
+                    <div class="audit-item">
+                        <div class="audit-icon blue">
+                            <i class="bi bi-hash"></i>
+                        </div>
+                        <div>
+                            <strong>Empreinte SHA-256</strong>
+                            <p>Hash recalculé et comparé au hash enregistré.</p>
+                        </div>
+                    </div>
+
+                    <div class="audit-item">
+                        <div class="audit-icon green">
+                            <i class="bi bi-key"></i>
+                        </div>
+                        <div>
+                            <strong>Signature ECDSA</strong>
+                            <p>Vérification de la signature numérique du document.</p>
+                        </div>
+                    </div>
+
+                    <div class="audit-item">
+                        <div class="audit-icon purple">
+                            <i class="bi bi-box"></i>
+                        </div>
+                        <div>
+                            <strong>Trace blockchain</strong>
+                            <p>Recherche de la transaction et comparaison du hash.</p>
+                        </div>
+                    </div>
+
+                    <div class="audit-item">
+                        <div class="audit-icon orange">
+                            <i class="bi bi-cpu"></i>
+                        </div>
+                        <div>
+                            <strong>Analyse IA</strong>
+                            <p>Calcul du score de risque associé au document.</p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="result-empty mt-4">
+                    <i class="bi bi-shield-lock"></i>
+                    <h5>Aucune vérification lancée</h5>
+                    <p>
+                        Sélectionnez un PDF signé pour afficher ici le résultat :
+                        document authentique, altéré ou incohérent.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+.verify-card{
+    background:white;
+    border:1px solid #E4EBF5;
+    border-radius:22px;
+    padding:28px;
+    box-shadow:0 12px 35px rgba(9,30,66,.06);
+}
+
+.verify-upload{
+    border:2px dashed #BBD3FF;
+    border-radius:22px;
+    padding:48px 20px;
+    text-align:center;
+    background:#F8FBFF;
+}
+
+.verify-upload i{
+    font-size:56px;
+    color:#0057D9;
+}
+
+.verify-upload h5{
+    font-weight:800;
+    margin-top:12px;
+}
+
+.verify-upload p{
+    color:#64748B;
+}
+
+.verify-upload input[type="file"]{
+    display:none;
+}
+
+.file-preview{
+    border:1px solid #E4EBF5;
+    border-radius:18px;
+    padding:16px;
+    display:flex;
+    align-items:center;
+    gap:14px;
+    background:white;
+}
+
+.pdf-badge{
+    background:#DC2626;
+    color:white;
+    font-weight:800;
+    padding:8px 9px;
+    border-radius:8px;
+    font-size:.8rem;
+}
+
+.file-preview small{
+    display:block;
+    color:#64748B;
+}
+
+.valid-file{
+    margin-left:auto;
+    color:#16A34A;
+    font-weight:700;
+}
+
+.result-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:15px;
+}
+
+.status-pill{
+    padding:8px 14px;
+    border-radius:999px;
+    font-weight:800;
+    font-size:.82rem;
+}
+
+.status-pill.waiting{
+    background:#FEF3C7;
+    color:#B45309;
+}
+
+.audit-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+}
+
+.audit-item{
+    border:1px solid #E4EBF5;
+    border-radius:18px;
+    padding:18px;
+    display:flex;
+    gap:14px;
+    align-items:flex-start;
+}
+
+.audit-item p{
+    margin-bottom:0;
+    color:#64748B;
+    font-size:.92rem;
+}
+
+.audit-icon{
+    width:44px;
+    height:44px;
+    border-radius:14px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:22px;
+    flex-shrink:0;
+}
+
+.audit-icon.blue{background:#EEF5FF;color:#0057D9;}
+.audit-icon.green{background:#DCFCE7;color:#16A34A;}
+.audit-icon.purple{background:#F3E8FF;color:#7C3AED;}
+.audit-icon.orange{background:#FEF3C7;color:#F59E0B;}
+
+.result-empty{
+    text-align:center;
+    background:#F8FBFF;
+    border:1px solid #E4EBF5;
+    border-radius:22px;
+    padding:45px 20px;
+}
+
+.result-empty i{
+    font-size:65px;
+    color:#0057D9;
+}
+
+.result-empty h5{
+    font-weight:800;
+    margin-top:15px;
+}
+
+.result-empty p{
+    max-width:520px;
+    margin:8px auto 0;
+    color:#64748B;
+}
+
+@media(max-width:768px){
+    .audit-grid{
+        grid-template-columns:1fr;
+    }
+
+    .result-header{
+        flex-direction:column;
+        align-items:flex-start;
+    }
+}
+</style>
+
+<script>
+const verifyPdf = document.getElementById('verifyPdf');
+const verifyPreview = document.getElementById('verifyPreview');
+const verifyFileName = document.getElementById('verifyFileName');
+const verifyFileSize = document.getElementById('verifyFileSize');
+
+verifyPdf.addEventListener('change', function(){
+    const file = this.files[0];
+
+    if(file){
+        verifyFileName.textContent = file.name;
+        verifyFileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+        verifyPreview.classList.remove('d-none');
+    }
+});
+</script>
+
+{% endblock %}

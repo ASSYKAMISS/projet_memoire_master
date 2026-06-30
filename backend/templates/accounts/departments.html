@@ -1,0 +1,298 @@
+{% extends 'base.html' %}
+
+{% block title %}Gestion des départements - ChainSign AI{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-building-fill text-primary me-2"></i>
+                Gestion des départements
+            </h2>
+            <p class="text-muted mb-0">
+                Créez, consultez et organisez les départements de l’organisation.
+            </p>
+        </div>
+
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Retour
+        </a>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row g-4">
+
+        <!-- Formulaire création département -->
+        <div class="col-lg-4">
+            <div class="departments-card h-100">
+
+                <div class="card-title-box mb-4">
+                    <div class="icon-box">
+                        <i class="bi bi-building-add"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-1">Nouveau département</h5>
+                        <p class="text-muted mb-0 small">
+                            Ajoutez un département à l’organisation.
+                        </p>
+                    </div>
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="nom" class="form-label fw-semibold">
+                            Nom du département
+                        </label>
+                        <input 
+                            type="text" 
+                            name="nom" 
+                            id="nom" 
+                            class="form-control custom-input"
+                            placeholder="Ex : Ressources humaines"
+                            required
+                        >
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="description" class="form-label fw-semibold">
+                            Description
+                        </label>
+                        <textarea 
+                            name="description" 
+                            id="description" 
+                            rows="5" 
+                            class="form-control custom-input"
+                            placeholder="Décrivez brièvement le rôle du département"
+                        ></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 btn-create">
+                        <i class="bi bi-plus-circle me-1"></i>
+                        Créer le département
+                    </button>
+                </form>
+
+            </div>
+        </div>
+
+        <!-- Liste des départements -->
+        <div class="col-lg-8">
+            <div class="departments-card">
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h5 class="fw-bold mb-1">
+                            <i class="bi bi-buildings text-primary me-2"></i>
+                            Départements existants
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Liste des départements créés dans le système.
+                        </p>
+                    </div>
+
+                    <span class="count-badge">
+                        {{ departements|length }} département(s)
+                    </span>
+                </div>
+
+                {% if departements %}
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Département</th>
+                                <th>Description</th>
+                                <th>Responsable</th>
+                                <th>Date création</th>
+                                <th>Statut</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for departement in departements %}
+                            <tr>
+                                <td>
+                                    <div class="department-cell">
+                                        <div class="department-avatar">
+                                            {{ departement.nom|first|upper }}
+                                        </div>
+                                        <div>
+                                            <strong>{{ departement.nom }}</strong>
+                                            <small>Département organisationnel</small>
+                                        </div>
+                                    </div>
+                                </td>
+
+                                <td>
+                                    {% if departement.description %}
+                                        {{ departement.description|truncatechars:65 }}
+                                    {% else %}
+                                        <span class="text-muted">Aucune description</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if departement.responsable %}
+                                        {{ departement.responsable.first_name|default:departement.responsable.username }}
+                                    {% else %}
+                                        <span class="text-muted">Non défini</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ departement.date_creation|date:"d/m/Y" }}
+                                </td>
+
+                                <td>
+                                    <span class="status active">Actif</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+
+                    </table>
+                </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-building text-muted" style="font-size:70px;"></i>
+                        <h5 class="fw-bold mt-3">Aucun département</h5>
+                        <p class="text-muted">
+                            Commencez par créer le premier département de l’organisation.
+                        </p>
+                    </div>
+                {% endif %}
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+.departments-card {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 22px;
+    padding: 28px;
+    box-shadow: 0 12px 35px rgba(9,30,66,.06);
+}
+
+.card-title-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: #EAF2FF;
+    color: #0057D9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.custom-input {
+    border: 1px solid #D7E0EC;
+    border-radius: 14px;
+    padding: 11px 14px;
+    font-size: .95rem;
+}
+
+.custom-input:focus {
+    border-color: #0057D9;
+    box-shadow: 0 0 0 .2rem rgba(0, 87, 217, .12);
+}
+
+.btn-create {
+    border-radius: 14px;
+    padding: 11px;
+    font-weight: 700;
+}
+
+.count-badge {
+    background: #EAF2FF;
+    color: #0057D9;
+    padding: 8px 14px;
+    border-radius: 999px;
+    font-size: .85rem;
+    font-weight: 800;
+}
+
+.department-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.department-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 14px;
+    background: #0057D9;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+.department-cell small {
+    display: block;
+    color: #64748B;
+}
+
+.status {
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 700;
+}
+
+.status.active {
+    background: #DCFCE7;
+    color: #15803D;
+}
+
+.table thead th {
+    color: #475569;
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    border-bottom: 1px solid #E4EBF5;
+}
+
+.table tbody td {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    color: #334155;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid #EEF2F7;
+}
+
+.table tbody tr:last-child {
+    border-bottom: none;
+}
+</style>
+
+{% endblock %}

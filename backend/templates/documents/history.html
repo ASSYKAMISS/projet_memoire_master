@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+
+{% block title %}Historique - ChainSign AI{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-clock-history text-primary me-2"></i>
+                Historique des opérations
+            </h2>
+            <p class="text-muted mb-0">
+                Consultez les actions effectuées sur vos documents.
+            </p>
+        </div>
+
+        <a href="{% url 'dashboard' %}" class="btn btn-primary">
+            Tableau de bord
+        </a>
+    </div>
+
+    <div class="history-card">
+
+        {% if historiques %}
+
+            <div class="timeline">
+
+                {% for h in historiques %}
+
+                    <div class="timeline-item">
+                        <div class="timeline-icon">
+                            {% if h.action == 'UPLOAD' %}
+                                <i class="bi bi-cloud-upload"></i>
+                            {% elif h.action == 'SIGNATURE' %}
+                                <i class="bi bi-pen"></i>
+                            {% elif h.action == 'VERIFICATION' %}
+                                <i class="bi bi-patch-check"></i>
+                            {% elif h.action == 'BLOCKCHAIN_RECORD' %}
+                                <i class="bi bi-box"></i>
+                            {% elif h.action == 'AI_ANALYSIS' %}
+                                <i class="bi bi-cpu"></i>
+                            {% else %}
+                                <i class="bi bi-clock"></i>
+                            {% endif %}
+                        </div>
+
+                        <div class="timeline-content">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="fw-bold mb-1">{{ h.get_action_display }}</h6>
+                                <small class="text-muted">{{ h.date_action|date:"d/m/Y H:i" }}</small>
+                            </div>
+
+                            <p class="mb-1">
+                                Document :
+                                <strong>{{ h.document.titre }}</strong>
+                            </p>
+
+                            {% if h.details %}
+                                <p class="text-muted mb-0">{{ h.details }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                {% endfor %}
+
+            </div>
+
+        {% else %}
+
+            <div class="empty-state">
+                <i class="bi bi-clock-history"></i>
+                <h5>Aucune opération enregistrée</h5>
+                <p>
+                    Les actions comme le téléversement, la signature, la vérification ou l’analyse IA apparaîtront ici.
+                </p>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+<style>
+.history-card {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 22px;
+    padding: 30px;
+    box-shadow: 0 12px 35px rgba(9, 30, 66, 0.06);
+}
+
+.timeline {
+    position: relative;
+    padding-left: 10px;
+}
+
+.timeline-item {
+    display: grid;
+    grid-template-columns: 55px 1fr;
+    gap: 18px;
+    margin-bottom: 24px;
+}
+
+.timeline-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: #EEF5FF;
+    color: #0057D9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.timeline-content {
+    background: #F8FBFF;
+    border: 1px solid #E4EBF5;
+    border-radius: 18px;
+    padding: 18px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 70px 20px;
+}
+
+.empty-state i {
+    font-size: 70px;
+    color: #94A3B8;
+}
+
+.empty-state h5 {
+    margin-top: 15px;
+    font-weight: 800;
+}
+
+.empty-state p {
+    color: #64748B;
+}
+</style>
+
+{% endblock %}

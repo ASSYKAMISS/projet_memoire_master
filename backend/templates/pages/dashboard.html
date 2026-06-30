@@ -1,0 +1,487 @@
+{% extends 'base.html' %}
+
+{% block title %}Tableau de bord - ChainSign AI{% endblock %}
+
+{% block page_title %}Tableau de bord{% endblock %}
+
+{% block page_subtitle %}
+Bienvenue {{ user.first_name|default:user.username }}. Vue d’ensemble de votre activité.
+{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-end mb-4">
+    <a href="{% url 'upload_document' %}" class="btn btn-primary">
+        <i class="bi bi-cloud-upload me-2"></i>
+        Nouveau document
+    </a>
+</div>
+
+<div class="row g-4 mb-4">
+
+    <div class="col-xl col-md-4 col-sm-6">
+        <div class="metric-card">
+            <div class="metric-icon blue">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <p>Documents téléversés</p>
+            <h3>{{ total_documents|default:0 }}</h3>
+        </div>
+    </div>
+
+    <div class="col-xl col-md-4 col-sm-6">
+        <div class="metric-card">
+            <div class="metric-icon green">
+                <i class="bi bi-pen"></i>
+            </div>
+            <p>Documents signés</p>
+            <h3>{{ total_signes|default:0 }}</h3>
+        </div>
+    </div>
+
+    <div class="col-xl col-md-4 col-sm-6">
+        <div class="metric-card">
+            <div class="metric-icon blue">
+                <i class="bi bi-patch-check"></i>
+            </div>
+            <p>Vérifications effectuées</p>
+            <h3>{{ total_verifications|default:0 }}</h3>
+        </div>
+    </div>
+
+    <div class="col-xl col-md-4 col-sm-6">
+        <div class="metric-card">
+            <div class="metric-icon red">
+                <i class="bi bi-x-circle-fill"></i>
+            </div>
+            <p>Documents invalides</p>
+            <h3>{{ total_invalides|default:0 }}</h3>
+        </div>
+    </div>
+
+    <div class="col-xl col-md-4 col-sm-6">
+        <div class="metric-card">
+            <div class="metric-icon purple">
+                <i class="bi bi-cpu"></i>
+            </div>
+            <p>Score IA moyen</p>
+            <h3>{{ score_ia_moyen|default:12 }} <small>/100</small></h3>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-4">
+
+    <div class="col-xl-8">
+        <div class="dashboard-card h-100">
+
+            <div class="card-head">
+                <div>
+                    <h5>Documents récents</h5>
+                    <p>Consultez vos documents et leur statut.</p>
+                </div>
+
+                <a href="{% url 'document_list' %}" class="btn btn-outline-primary btn-sm">
+                    Voir tous les documents
+                    <i class="bi bi-arrow-right ms-1"></i>
+                </a>
+            </div>
+
+            {% if documents %}
+            <div class="table-responsive">
+                <table class="table dashboard-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Document</th>
+                            <th>Statut</th>
+                            <th>Hash SHA-256</th>
+                            <th>Blockchain</th>
+                            <th>Score IA</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for document in documents %}
+                        <tr>
+                            <td>
+                                <div class="doc-cell">
+                                    <div class="pdf-icon">PDF</div>
+                                    <div>
+                                        <strong>{{ document.titre }}</strong>
+                                        <small>{{ document.date_upload|date:"d/m/Y H:i" }}</small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if document.statut == 'SIGNE' %}
+                                    <span class="status-badge badge-success">Signé</span>
+                                {% elif document.statut == 'INVALIDE' %}
+                                    <span class="status-badge badge-danger">Invalide</span>
+                                {% elif document.statut == 'VERIFIE' %}
+                                    <span class="status-badge badge-info">Vérifié</span>
+                                {% else %}
+                                    <span class="status-badge badge-warning">Brouillon</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if document.hash_original %}
+                                    <code>{{ document.hash_original|slice:":10" }}...{{ document.hash_original|slice:"-4:" }}</code>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if document.audit_blockchain %}
+                                    <a href="{% url 'blockchain_audit' %}" class="tx-link">
+                                        TxID : {{ document.audit_blockchain.transaction_hash|slice:":8" }}...
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if document.score_risque %}
+                                    {% if document.score_risque.niveau == 'ELEVE' %}
+                                        <span class="score-danger">{{ document.score_risque.score|floatformat:0 }}/100</span>
+                                    {% elif document.score_risque.niveau == 'MOYEN' %}
+                                        <span class="score-warning">{{ document.score_risque.score|floatformat:0 }}/100</span>
+                                    {% else %}
+                                        <span class="score-success">{{ document.score_risque.score|floatformat:0 }}/100</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                <a href="{% url 'document_detail' document.id %}" class="action-btn">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+
+                                <a href="#" class="action-btn">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+            {% else %}
+
+            <div class="empty-state">
+                <i class="bi bi-folder2-open"></i>
+                <h5>Aucun document pour le moment</h5>
+                <p>
+                    Commencez par téléverser un document PDF pour générer son empreinte SHA-256.
+                </p>
+
+                <a href="{% url 'upload_document' %}" class="btn btn-primary">
+                    Téléverser mon premier document
+                </a>
+            </div>
+
+            {% endif %}
+
+        </div>
+    </div>
+
+    <div class="col-xl-4">
+
+        <div class="dashboard-card mb-4">
+            <h5>Score de risque IA</h5>
+
+            <div class="risk-box">
+                <div class="risk-circle">
+                    <strong>{{ score_ia_moyen|default:12 }}</strong>
+                    <span>/100</span>
+                </div>
+
+                <div class="risk-legend">
+                    <p><span class="dot green"></span> 0 - 20 <strong>Faible</strong></p>
+                    <p><span class="dot yellow"></span> 21 - 60 <strong>Moyen</strong></p>
+                    <p><span class="dot red"></span> 61 - 100 <strong>Élevé</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h5>Activités récentes</h5>
+
+            <div class="activity-list">
+                <div class="activity-item">
+                    <span class="activity-icon green">
+                        <i class="bi bi-check-lg"></i>
+                    </span>
+                    <div>
+                        <strong>Document signé</strong>
+                        <p>Signature effectuée avec succès.</p>
+                    </div>
+                    <small>Aujourd’hui</small>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-icon blue">
+                        <i class="bi bi-cloud-upload"></i>
+                    </span>
+                    <div>
+                        <strong>Nouveau document</strong>
+                        <p>Document téléversé dans l’espace sécurisé.</p>
+                    </div>
+                    <small>Récent</small>
+                </div>
+
+                <div class="activity-item">
+                    <span class="activity-icon orange">
+                        <i class="bi bi-box"></i>
+                    </span>
+                    <div>
+                        <strong>Blockchain</strong>
+                        <p>Trace disponible après signature.</p>
+                    </div>
+                    <small>Audit</small>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<style>
+.metric-card {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 22px;
+    padding: 26px;
+    box-shadow: 0 12px 35px rgba(9, 30, 66, .06);
+    height: 100%;
+}
+
+.metric-icon {
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 16px;
+}
+
+.metric-icon.blue { background: #EAF2FF; color: #0057D9; }
+.metric-icon.green { background: #E8F8EF; color: #16A34A; }
+.metric-icon.red { background: #FEE2E2; color: #DC2626; }
+.metric-icon.purple { background: #F3E8FF; color: #7C3AED; }
+
+.metric-card p {
+    color: #475569;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.metric-card h3 {
+    font-size: 2.2rem;
+    font-weight: 800;
+}
+
+.dashboard-card {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 22px;
+    padding: 26px;
+    box-shadow: 0 12px 35px rgba(9, 30, 66, .06);
+}
+
+.dashboard-card h5 {
+    font-weight: 800;
+    margin-bottom: 20px;
+}
+
+.card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 18px;
+}
+
+.card-head h5 {
+    margin-bottom: 4px;
+}
+
+.card-head p {
+    color: #64748B;
+    margin-bottom: 0;
+}
+
+.dashboard-table th {
+    color: #475569;
+    font-size: .85rem;
+    padding: 14px;
+}
+
+.dashboard-table td {
+    padding: 16px 14px;
+}
+
+.doc-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.doc-cell small {
+    display: block;
+    color: #64748B;
+    font-size: .78rem;
+}
+
+.pdf-icon {
+    background: #DC2626;
+    color: white;
+    font-weight: 800;
+    border-radius: 5px;
+    font-size: .7rem;
+    padding: 4px 5px;
+}
+
+.tx-link {
+    color: #0057D9;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.score-success { color: #16A34A; font-weight: 800; }
+.score-warning { color: #F59E0B; font-weight: 800; }
+.score-danger { color: #DC2626; font-weight: 800; }
+
+.action-btn {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #DDE7F5;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #0057D9;
+    text-decoration: none;
+    margin-left: 5px;
+    background: white;
+}
+
+.action-btn:hover {
+    background: #EEF5FF;
+}
+
+.risk-box {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+}
+
+.risk-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    background: conic-gradient(#16A34A 0 15%, #F59E0B 15% 45%, #DC2626 45% 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    color: #081225;
+}
+
+.risk-circle::before {
+    content: "";
+    position: absolute;
+    width: 112px;
+    height: 112px;
+    background: white;
+    border-radius: 50%;
+}
+
+.risk-circle strong,
+.risk-circle span {
+    position: relative;
+    z-index: 1;
+}
+
+.risk-circle strong {
+    font-size: 2.2rem;
+    font-weight: 800;
+}
+
+.risk-legend p {
+    margin-bottom: 14px;
+    color: #334155;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 8px;
+}
+
+.dot.green { background: #16A34A; }
+.dot.yellow { background: #F59E0B; }
+.dot.red { background: #DC2626; }
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.activity-item {
+    display: grid;
+    grid-template-columns: 42px 1fr auto;
+    gap: 12px;
+    align-items: start;
+}
+
+.activity-item p {
+    color: #64748B;
+    margin: 4px 0 0;
+    font-size: .9rem;
+}
+
+.activity-item small {
+    color: #64748B;
+}
+
+.activity-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.activity-icon.green { background: #DCFCE7; color: #16A34A; }
+.activity-icon.blue { background: #DBEAFE; color: #0057D9; }
+.activity-icon.orange { background: #FEF3C7; color: #F59E0B; }
+
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.empty-state i {
+    font-size: 70px;
+    color: #94A3B8;
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,326 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Audit Blockchain - ChainSign AI{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-box text-primary me-2"></i>
+                Audit Blockchain
+            </h2>
+            <p class="text-muted mb-0">
+                Consultez les preuves d'intégrité enregistrées sur la blockchain.
+            </p>
+        </div>
+
+        <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-folder me-1"></i>
+            Documents
+        </a>
+    </div>
+
+    <div class="summary-row mb-4">
+        <div class="summary-card">
+            <div class="summary-icon blue">
+                <i class="bi bi-database-check"></i>
+            </div>
+            <div>
+                <span>Total audits</span>
+                <strong>{{ total_audits }}</strong>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon green">
+                <i class="bi bi-check-circle"></i>
+            </div>
+            <div>
+                <span>Enregistrés</span>
+                <strong>{{ total_enregistres }}</strong>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon red">
+                <i class="bi bi-x-circle"></i>
+            </div>
+            <div>
+                <span>Échecs</span>
+                <strong>{{ total_echecs }}</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="audit-card">
+
+        {% if audits %}
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Document</th>
+                            <th>Hash signé</th>
+                            <th>Signataire</th>
+                            <th>Transaction</th>
+                            <th>Bloc</th>
+                            <th>Date blockchain</th>
+                            <th>Statut</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for audit in audits %}
+                        <tr>
+                            <td>
+                                <div class="document-cell">
+                                    <div class="chain-avatar">
+                                        <i class="bi bi-file-earmark-lock"></i>
+                                    </div>
+                                    <div>
+                                        <strong>{{ audit.document.titre }}</strong>
+                                        <small>
+                                            Déposé par :
+                                            {{ audit.document.utilisateur.first_name|default:audit.document.utilisateur.username }}
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if audit.hash_document %}
+                                    <code class="hash-text">
+                                        {{ audit.hash_document|slice:":12" }}...{{ audit.hash_document|slice:"-8:" }}
+                                    </code>
+                                {% else %}
+                                    <span class="text-muted">Non disponible</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ audit.signataire_pseudonyme|default:"-" }}
+                            </td>
+
+                            <td>
+                                {% if audit.transaction_hash %}
+                                    <code class="tx-text">
+                                        {{ audit.transaction_hash|slice:":12" }}...
+                                    </code>
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if audit.block_number %}
+                                    #{{ audit.block_number }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if audit.timestamp_blockchain %}
+                                    {{ audit.timestamp_blockchain|date:"d/m/Y H:i" }}
+                                {% else %}
+                                    <span class="text-muted">-</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if audit.statut == 'ENREGISTRE' %}
+                                    <span class="status success">Enregistré</span>
+                                {% else %}
+                                    <span class="status failed">Échec</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end">
+    {% if audit.statut == 'ENREGISTRE' %}
+        <a href="{% url 'verify_blockchain_audit' audit.id %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-shield-check me-1"></i>
+            Vérifier
+        </a>
+    {% else %}
+        <span class="text-muted small">Indisponible</span>
+    {% endif %}
+</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+        {% else %}
+
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-box"></i>
+                </div>
+
+                <h4 class="fw-bold mt-3">Aucun audit blockchain</h4>
+                <p class="text-muted">
+                    Les preuves blockchain apparaîtront ici après la signature complète d'un document.
+                </p>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+<style>
+.summary-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.summary-card,
+.audit-card {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 22px;
+    padding: 24px;
+    box-shadow: 0 12px 35px rgba(9,30,66,.06);
+}
+
+.summary-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.summary-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.summary-icon.blue {
+    background: #EEF5FF;
+    color: #0057D9;
+}
+
+.summary-icon.green {
+    background: #DCFCE7;
+    color: #15803D;
+}
+
+.summary-icon.red {
+    background: #FEE2E2;
+    color: #B91C1C;
+}
+
+.summary-card span {
+    display: block;
+    color: #64748B;
+    font-size: .85rem;
+    font-weight: 700;
+}
+
+.summary-card strong {
+    color: #071B3A;
+    font-size: 1.6rem;
+}
+
+.document-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chain-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: #EEF5FF;
+    color: #0057D9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+}
+
+.document-cell small {
+    display: block;
+    color: #64748B;
+    margin-top: 3px;
+}
+
+.hash-text,
+.tx-text {
+    background: #F8FBFF;
+    border: 1px solid #E4EBF5;
+    color: #334155;
+    border-radius: 10px;
+    padding: 6px 9px;
+    font-size: .82rem;
+}
+
+.status {
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 800;
+}
+
+.status.success {
+    background: #DCFCE7;
+    color: #15803D;
+}
+
+.status.failed {
+    background: #FEE2E2;
+    color: #B91C1C;
+}
+
+.table thead th {
+    color: #475569;
+    font-size: .82rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    border-bottom: 1px solid #E4EBF5;
+}
+
+.table tbody td {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    color: #334155;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 70px 20px;
+}
+
+.empty-icon {
+    width: 90px;
+    height: 90px;
+    border-radius: 26px;
+    background: #EEF5FF;
+    color: #0057D9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    margin: auto;
+}
+
+@media(max-width: 992px) {
+    .summary-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+{% endblock %}

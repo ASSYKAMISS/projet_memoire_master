@@ -1,0 +1,451 @@
+{% extends 'base.html' %}
+
+{% block title %}Désignation des accès - ChainSign AI{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="workflow-card mb-4">
+        <div class="badge-title">DÉSIGNATION DES ACCÈS</div>
+
+        <div class="steps">
+            <div class="step done">
+                <div class="step-icon"><i class="bi bi-check-lg"></i></div>
+                <span>Téléversement</span>
+            </div>
+
+            <div class="step-line"></div>
+
+            <div class="step active">
+                <div class="step-icon"><i class="bi bi-person-check"></i></div>
+                <span>Désignation des accès</span>
+            </div>
+           
+        </div>
+    </div>
+
+    <form method="POST">
+        {% csrf_token %}
+
+        <div class="row g-4">
+
+            <div class="col-lg-4">
+                <div class="info-panel h-100">
+                    <div class="document-icon">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                    </div>
+
+                    <h4 class="fw-bold mt-4">{{ document.titre }}</h4>
+
+                    <p class="text-muted">
+                        Choisissez les départements ou les agents autorisés à consulter et signer ce document.
+                    </p>
+
+                    <div class="doc-info mt-4">
+                        <div>
+                            <span>Statut</span>
+                            <strong>{{ document.get_statut_display }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Date dépôt</span>
+                            <strong>{{ document.date_upload|date:"d/m/Y" }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Empreinte SHA-256</span>
+                            <small>{{ document.hash_original|truncatechars:32 }}</small>
+                        </div>
+                    </div>
+
+                    <div class="security-note mt-4">
+                        <i class="bi bi-shield-check"></i>
+                        <p>
+                            Seuls les agents sélectionnés ou appartenant aux départements choisis pourront signer.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+
+                <div class="access-card mb-4">
+                    <div class="card-title-box mb-4">
+                        <div class="icon-box">
+                            <i class="bi bi-buildings"></i>
+                        </div>
+
+                        <div>
+                            <h5 class="fw-bold mb-1">Départements concernés</h5>
+                            <p class="text-muted mb-0 small">
+                                Sélectionnez un ou plusieurs départements.
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if departements %}
+                        <div class="row g-3">
+                            {% for departement in departements %}
+                                <div class="col-md-6">
+                                    <label class="access-option">
+                                        <input type="checkbox"
+                                               name="departements"
+                                               value="{{ departement.id }}">
+
+                                        <div class="option-content">
+                                            <div class="option-icon">
+                                                {{ departement.nom|first|upper }}
+                                            </div>
+
+                                            <div>
+                                                <strong>{{ departement.nom }}</strong>
+                                                <small>
+                                                    {{ departement.description|default:"Département organisationnel"|truncatechars:55 }}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-box">
+                            <i class="bi bi-building"></i>
+                            <strong>Aucun département disponible</strong>
+                            <p>Créez d'abord un département avant d'attribuer un document.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="access-card">
+                    <div class="card-title-box mb-4">
+                        <div class="icon-box">
+                            <i class="bi bi-people"></i>
+                        </div>
+
+                        <div>
+                            <h5 class="fw-bold mb-1">Agents autorisés</h5>
+                            <p class="text-muted mb-0 small">
+                                Vous pouvez aussi choisir directement des agents précis.
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if agents %}
+                        <div class="row g-3">
+                            {% for agent in agents %}
+                                <div class="col-md-6">
+                                    <label class="access-option">
+                                        <input type="checkbox"
+                                               name="agents"
+                                               value="{{ agent.id }}">
+
+                                        <div class="option-content">
+                                            <div class="agent-avatar">
+                                                {{ agent.first_name|default:agent.username|first|upper }}
+                                            </div>
+
+                                            <div>
+                                                <strong>
+                                                    {{ agent.first_name }} {{ agent.last_name }}
+                                                </strong>
+                                                <small>
+                                                    {{ agent.email }}
+                                                    {% if agent.profil.departement %}
+                                                        — {{ agent.profil.departement.nom }}
+                                                    {% endif %}
+                                                </small>
+                                            </div>
+                                        </div>
+                                    </label>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-box">
+                            <i class="bi bi-people"></i>
+                            <strong>Aucun agent disponible</strong>
+                            <p>Créez d'abord des agents avant d'attribuer un document.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="bottom-actions mt-4">
+            <a href="{% url 'upload_document' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>
+                Retour
+            </a>
+
+            <button type="submit" class="btn btn-primary btn-lg">
+                Attribuer les accès
+                <i class="bi bi-check-circle ms-2"></i>
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+<style>
+.workflow-card,
+.info-panel,
+.access-card {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 22px;
+    padding: 28px;
+    box-shadow: 0 12px 35px rgba(9, 30, 66, 0.06);
+}
+
+.badge-title {
+    display: inline-block;
+    background: #0057D9;
+    color: white;
+    font-weight: 800;
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin-bottom: 28px;
+}
+
+.steps {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.step {
+    text-align: center;
+    color: #64748B;
+    font-weight: 600;
+    font-size: 0.9rem;
+    min-width: 120px;
+}
+
+.step-icon,
+.step-number {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 1px solid #BBD3FF;
+    background: #F3F7FF;
+    color: #0057D9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-size: 24px;
+}
+
+.step.active .step-icon,
+.step.active .step-number {
+    background: #0057D9;
+    color: white;
+    box-shadow: 0 12px 25px rgba(0, 87, 217, 0.25);
+}
+
+.step.done .step-icon {
+    background: #DCFCE7;
+    color: #15803D;
+    border-color: #BBF7D0;
+}
+
+.step-line {
+    height: 3px;
+    flex: 1;
+    background: linear-gradient(90deg, #0057D9, #8BB8FF);
+    border-radius: 999px;
+    margin-bottom: 30px;
+}
+
+.document-icon {
+    width: 76px;
+    height: 76px;
+    border-radius: 24px;
+    background: #FEE2E2;
+    color: #DC2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+.doc-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.doc-info div {
+    background: #F8FBFF;
+    border: 1px solid #E4EBF5;
+    border-radius: 14px;
+    padding: 13px 15px;
+}
+
+.doc-info span {
+    display: block;
+    color: #64748B;
+    font-size: .82rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.doc-info strong {
+    color: #071B3A;
+}
+
+.doc-info small {
+    color: #334155;
+    word-break: break-all;
+}
+
+.security-note {
+    display: flex;
+    gap: 12px;
+    background: #EEF5FF;
+    border: 1px solid #CFE0FF;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.security-note i {
+    color: #0057D9;
+    font-size: 24px;
+}
+
+.security-note p {
+    margin: 0;
+    color: #526175;
+    font-weight: 600;
+}
+
+.card-title-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: #EAF2FF;
+    color: #0057D9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+.access-option {
+    display: block;
+    cursor: pointer;
+}
+
+.access-option input {
+    display: none;
+}
+
+.option-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border: 1px solid #E4EBF5;
+    border-radius: 18px;
+    padding: 16px;
+    background: #FFFFFF;
+    transition: .2s ease;
+    min-height: 82px;
+}
+
+.access-option input:checked + .option-content {
+    border-color: #0057D9;
+    background: #EEF5FF;
+    box-shadow: 0 10px 25px rgba(0, 87, 217, .12);
+}
+
+.option-icon,
+.agent-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: #0057D9;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+.option-content strong {
+    display: block;
+    color: #071B3A;
+}
+
+.option-content small {
+    display: block;
+    color: #64748B;
+    margin-top: 3px;
+}
+
+.empty-box {
+    text-align: center;
+    padding: 45px 20px;
+    border: 1px dashed #BBD3FF;
+    border-radius: 18px;
+    background: #F8FBFF;
+    color: #64748B;
+}
+
+.empty-box i {
+    display: block;
+    color: #0057D9;
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.empty-box strong {
+    color: #071B3A;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.empty-box p {
+    margin: 0;
+}
+
+.bottom-actions {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    box-shadow: 0 12px 35px rgba(9, 30, 66, 0.06);
+}
+
+@media (max-width: 992px) {
+    .steps {
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 10px;
+    }
+
+    .step-line {
+        min-width: 60px;
+    }
+
+    .bottom-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+}
+</style>
+
+{% endblock %}

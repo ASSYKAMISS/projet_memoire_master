@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+
+{% block title %}Documents à signer - ChainSign AI{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-pen-fill text-primary me-2"></i>
+                Documents à signer
+            </h2>
+            <p class="text-muted mb-0">
+                Retrouvez ici les documents qui vous ont été attribués pour signature.
+            </p>
+        </div>
+
+        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>
+            Retour
+        </a>
+    </div>
+
+    <div class="summary-row mb-4">
+        <div class="summary-card">
+            <div class="summary-icon blue">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <div>
+                <span>Total</span>
+                <strong>{{ documents|length }}</strong>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon orange">
+                <i class="bi bi-hourglass-split"></i>
+            </div>
+            <div>
+                <span>En attente</span>
+                <strong>{{ documents|length }}</strong>
+            </div>
+        </div>
+
+        <div class="summary-card">
+            <div class="summary-icon green">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div>
+                <span>Signature sécurisée</span>
+                <strong>ECDSA</strong>
+            </div>
+        </div>
+    </div>
+
+    <div class="to-sign-card">
+
+        {% if documents %}
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Document</th>
+                            <th>Déposé par</th>
+                            <th>Date dépôt</th>
+                            <th>Statut</th>
+                            <th>Hash SHA-256</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for document in documents %}
+                        <tr>
+                            <td>
+                                <div class="document-cell">
+                                    <div class="pdf-avatar">
+                                        PDF
+                                    </div>
+
+                                    <div>
+                                        <strong>{{ document.titre }}</strong>
+                                        <small>Document électronique à signer</small>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td>
+                                {% if document.utilisateur.first_name or document.utilisateur.last_name %}
+                                    {{ document.utilisateur.first_name }} {{ document.utilisateur.last_name }}
+                                {% else %}
+                                    {{ document.utilisateur.username }}
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {{ document.date_upload|date:"d/m/Y" }}
+                            </td>
+
+                            <td>
+                                {% if document.statut == 'EN_ATTENTE_SIGNATURE' %}
+                                    <span class="status pending">En attente</span>
+                                {% elif document.statut == 'SIGNE' %}
+                                    <span class="status signed">Signé</span>
+                                {% elif document.statut == 'INVALIDE' %}
+                                    <span class="status invalid">Invalide</span>
+                                {% else %}
+                                    <span class="status draft">{{ document.get_statut_display }}</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if document.hash_original %}
+                                    <span class="hash-text">
+                                        {{ document.hash_original|truncatechars:24 }}
+                                    </span>
+                                {% else %}
+                                    <span class="text-muted">Non calculé</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="text-end">
+                                {% if document.statut == 'EN_ATTENTE_SIGNATURE' or document.statut == 'BROUILLON' %}
+                                  <a href="{% url 'sign_manual' document.id %}" class="btn btn-sm btn-primary">
+    <i class="bi bi-pen me-1"></i>
+    Signer
+</a>
+                                {% else %}
+                                    <a href="{% url 'document_detail' document.id %}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye me-1"></i>
+                                        Voir
+                                    </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+
+        {% else %}
+
+            <div class="empty-state">
+                <div class="empty-icon">
+                    <i class="bi bi-inbox"></i>
+                </div>
+
+                <h4 class="fw-bold mt-3">
+                    Aucun document à signer
+                </h4>
+
+                <p class="text-muted">
+                    Les documents attribués par votre responsable apparaîtront ici.
+                </p>
+
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-primary mt-2">
+                    Retour au tableau de bord
+                </a>
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</div>
+
+<style>
+.summary-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+}
+
+.summary-card {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 20px;
+    padding: 20px;
+    box-shadow: 0 12px 35px rgba(9,30,66,.06);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.summary-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.summary-icon.blue {
+    background: #EEF5FF;
+    color: #0057D9;
+}
+
+.summary-icon.orange {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.summary-icon.green {
+    background: #DCFCE7;
+    color: #15803D;
+}
+
+.summary-card span {
+    display: block;
+    color: #64748B;
+    font-size: .86rem;
+    font-weight: 700;
+}
+
+.summary-card strong {
+    font-size: 1.5rem;
+    color: #071B3A;
+}
+
+.to-sign-card {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 22px;
+    padding: 28px;
+    box-shadow: 0 12px 35px rgba(9,30,66,.06);
+}
+
+.document-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.pdf-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: #DC2626;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 900;
+    font-size: .8rem;
+}
+
+.document-cell small {
+    display: block;
+    color: #64748B;
+}
+
+.hash-text {
+    font-family: monospace;
+    background: #F8FBFF;
+    border: 1px solid #E4EBF5;
+    padding: 6px 10px;
+    border-radius: 10px;
+    color: #334155;
+    font-size: .82rem;
+}
+
+.status {
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 800;
+}
+
+.status.pending {
+    background: #FEF3C7;
+    color: #D97706;
+}
+
+.status.signed {
+    background: #DCFCE7;
+    color: #15803D;
+}
+
+.status.invalid {
+    background: #FEE2E2;
+    color: #B91C1C;
+}
+
+.status.draft {
+    background: #EEF5FF;
+    color: #0057D9;
+}
+
+.table thead th {
+    color: #475569;
+    font-size: .85rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    border-bottom: 1px solid #E4EBF5;
+}
+
+.table tbody td {
+    padding-top: 16px;
+    padding-bottom: 16px;
+    color: #334155;
+}
+
+.table tbody tr {
+    border-bottom: 1px solid #EEF2F7;
+}
+
+.table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 70px 20px;
+}
+
+.empty-icon {
+    width: 90px;
+    height: 90px;
+    border-radius: 26px;
+    background: #EEF5FF;
+    color: #0057D9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 42px;
+    margin: auto;
+}
+
+@media(max-width: 992px) {
+    .summary-row {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+{% endblock %}

@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+
+{% block title %}Téléversement / Signature - ChainSign AI{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="workflow-card mb-4">
+        <div class="badge-title">TÉLÉVERSEMENT / SIGNATURE</div>
+
+        <div class="steps">
+            <div class="step active">
+                <div class="step-icon"><i class="bi bi-cloud-upload"></i></div>
+                <span>Téléversement</span>
+            </div>
+
+            <div class="step-line"></div>
+
+            <div class="step">
+                <div class="step-icon"><i class="bi bi-person-check"></i></div>
+                <span>Désignation des accès</span>
+            </div>
+
+        
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+
+        <div class="row g-4">
+
+            <div class="col-lg-8">
+                <div class="upload-panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <h4 class="fw-bold mb-1">Téléverser un document PDF</h4>
+                            <p class="text-muted mb-0">
+                                Ajoutez un document afin de générer automatiquement son empreinte SHA-256.
+                            </p>
+                        </div>
+
+                        <div class="panel-icon">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </div>
+                    </div>
+
+                    <div class="upload-zone mt-4">
+                        <i class="bi bi-cloud-arrow-up"></i>
+                        <h5>Glissez votre PDF ici</h5>
+                        <p>ou cliquez pour parcourir vos fichiers</p>
+
+                        <input type="file"
+                               name="fichier_original"
+                               id="pdfInput"
+                               accept="application/pdf"
+                               required>
+
+                        <label for="pdfInput" class="btn btn-outline-primary mt-2">
+                            Choisir un fichier
+                        </label>
+                    </div>
+
+                    <div id="filePreview" class="file-preview d-none">
+                        <div class="pdf-badge">PDF</div>
+                        <div>
+                            <strong id="fileName">Document.pdf</strong>
+                            <small id="fileSize">0 MB</small>
+                        </div>
+                        <span class="valid-file">
+                            <i class="bi bi-check-circle-fill"></i> Fichier valide
+                        </span>
+                    </div>
+
+                    <div class="row g-3 mt-3">
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Titre du document</label>
+                            <input type="text"
+                                   name="titre"
+                                   class="form-control form-control-lg"
+                                   placeholder="Exemple : Contrat de prestation"
+                                   required>
+                        </div>
+
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Description optionnelle</label>
+                            <textarea name="description"
+                                      class="form-control"
+                                      rows="3"
+                                      placeholder="Ajoutez une courte description du document..."></textarea>
+                        </div>
+                    </div>
+
+                    <div class="security-note mt-4">
+                        <i class="bi bi-info-circle-fill"></i>
+                        <div>
+                            <strong>Traitement sécurisé</strong>
+                            <p>
+                                Après le téléversement, le système calcule automatiquement le hash SHA-256,
+                                puis le responsable désigne les départements ou agents autorisés à signer.
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="info-panel h-100">
+                    <h5 class="fw-bold mb-4">Processus de signature</h5>
+
+                    <div class="info-item">
+                        <div class="info-icon blue">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </div>
+                        <div>
+                            <strong>Format accepté</strong>
+                            <p>PDF uniquement</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon green">
+                            <i class="bi bi-person-check"></i>
+                        </div>
+                        <div>
+                            <strong>Désignation des accès</strong>
+                            <p>Choix des agents ou départements</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon green">
+                            <i class="bi bi-hash"></i>
+                        </div>
+                        <div>
+                            <strong>Empreinte SHA-256</strong>
+                            <p>Calcul automatique du hash</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon purple">
+                            <i class="bi bi-key"></i>
+                        </div>
+                        <div>
+                            <strong>Signature ECDSA</strong>
+                            <p>Signature numérique cryptographique</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon orange">
+                            <i class="bi bi-box"></i>
+                        </div>
+                        <div>
+                            <strong>Blockchain locale</strong>
+                            <p>Traçabilité via smart contract</p>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <div class="info-icon blue">
+                            <i class="bi bi-cpu"></i>
+                        </div>
+                        <div>
+                            <strong>Analyse IA</strong>
+                            <p>Calcul expérimental du score de risque</p>
+                        </div>
+                    </div>
+
+                    <div class="proof-box mt-4">
+                        <i class="bi bi-file-zip"></i>
+                        <div>
+                            <strong>Paquet de preuve</strong>
+                            <p>Généré à la fin du processus.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="bottom-actions mt-4">
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>
+                Retour
+            </a>
+
+            <button type="submit" class="btn btn-primary btn-lg">
+                Continuer vers désignation des accès
+                <i class="bi bi-arrow-right ms-2"></i>
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+<style>
+    .workflow-card {
+        background: white;
+        border: 1px solid #E4EBF5;
+        border-radius: 22px;
+        padding: 28px;
+        box-shadow: 0 12px 35px rgba(9, 30, 66, 0.06);
+    }
+
+    .badge-title {
+        display: inline-block;
+        background: #0057D9;
+        color: white;
+        font-weight: 800;
+        padding: 8px 16px;
+        border-radius: 8px;
+        margin-bottom: 28px;
+    }
+
+    .steps {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+    }
+
+    .step {
+        text-align: center;
+        color: #64748B;
+        font-weight: 600;
+        font-size: 0.9rem;
+        min-width: 120px;
+    }
+
+    .step-icon,
+    .step-number {
+        width: 54px;
+        height: 54px;
+        border-radius: 50%;
+        border: 1px solid #BBD3FF;
+        background: #F3F7FF;
+        color: #0057D9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 10px;
+        font-size: 24px;
+    }
+
+    .step.active .step-icon,
+    .step.active .step-number {
+        background: #0057D9;
+        color: white;
+        box-shadow: 0 12px 25px rgba(0, 87, 217, 0.25);
+    }
+
+    .step-line {
+        height: 3px;
+        flex: 1;
+        background: linear-gradient(90deg, #0057D9, #8BB8FF);
+        border-radius: 999px;
+        margin-bottom: 30px;
+    }
+
+    .upload-panel,
+    .info-panel {
+        background: white;
+        border: 1px solid #E4EBF5;
+        border-radius: 22px;
+        padding: 28px;
+        box-shadow: 0 12px 35px rgba(9, 30, 66, 0.06);
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .panel-icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        background: #EEF5FF;
+        color: #0057D9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+    }
+
+    .upload-zone {
+        border: 2px dashed #BBD3FF;
+        border-radius: 22px;
+        padding: 55px 25px;
+        text-align: center;
+        background: #F8FBFF;
+        position: relative;
+    }
+
+    .upload-zone i {
+        font-size: 56px;
+        color: #0057D9;
+    }
+
+    .upload-zone h5 {
+        font-weight: 800;
+        margin-top: 12px;
+        color: #071B3A;
+    }
+
+    .upload-zone p {
+        color: #64748B;
+        margin-bottom: 8px;
+    }
+
+    .upload-zone input[type="file"] {
+        display: none;
+    }
+
+    .file-preview {
+        margin-top: 20px;
+        border: 1px solid #E4EBF5;
+        border-radius: 18px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: white;
+    }
+
+    .pdf-badge {
+        background: #DC2626;
+        color: white;
+        font-weight: 800;
+        padding: 8px 9px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+    }
+
+    .file-preview small {
+        display: block;
+        color: #64748B;
+    }
+
+    .valid-file {
+        margin-left: auto;
+        color: #16A34A;
+        font-weight: 700;
+    }
+
+    .security-note {
+        display: flex;
+        gap: 14px;
+        background: #EEF5FF;
+        border: 1px solid #CFE0FF;
+        border-radius: 18px;
+        padding: 18px;
+        color: #071B3A;
+    }
+
+    .security-note i {
+        color: #0057D9;
+        font-size: 25px;
+    }
+
+    .security-note p {
+        margin-bottom: 0;
+        color: #526175;
+    }
+
+    .info-item {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #E4EBF5;
+    }
+
+    .info-item p {
+        margin-bottom: 0;
+        color: #64748B;
+        font-size: 0.92rem;
+    }
+
+    .info-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+    }
+
+    .info-icon.blue { background: #EEF5FF; color: #0057D9; }
+    .info-icon.green { background: #DCFCE7; color: #16A34A; }
+    .info-icon.purple { background: #F3E8FF; color: #7C3AED; }
+    .info-icon.orange { background: #FEF3C7; color: #F59E0B; }
+
+    .proof-box {
+        display: flex;
+        gap: 14px;
+        background: linear-gradient(135deg, #EEF5FF, #FFFFFF);
+        border: 1px solid #CFE0FF;
+        border-radius: 18px;
+        padding: 18px;
+    }
+
+    .proof-box i {
+        color: #7C3AED;
+        font-size: 36px;
+    }
+
+    .proof-box p {
+        margin-bottom: 0;
+        color: #64748B;
+    }
+
+    .bottom-actions {
+        background: white;
+        border: 1px solid #E4EBF5;
+        border-radius: 20px;
+        padding: 20px;
+        display: flex;
+        justify-content: space-between;
+        box-shadow: 0 12px 35px rgba(9, 30, 66, 0.06);
+    }
+
+    @media (max-width: 992px) {
+        .steps {
+            overflow-x: auto;
+            justify-content: flex-start;
+            padding-bottom: 10px;
+        }
+
+        .step-line {
+            min-width: 60px;
+        }
+
+        .bottom-actions {
+            flex-direction: column;
+            gap: 12px;
+        }
+    }
+</style>
+
+<script>
+    const pdfInput = document.getElementById('pdfInput');
+    const filePreview = document.getElementById('filePreview');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+
+    pdfInput.addEventListener('change', function () {
+        const file = this.files[0];
+
+        if (file) {
+            fileName.textContent = file.name;
+            fileSize.textContent = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+            filePreview.classList.remove('d-none');
+        }
+    });
+</script>
+
+{% endblock %}

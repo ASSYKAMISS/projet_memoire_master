@@ -1,0 +1,478 @@
+{% extends 'base_public.html' %}
+
+{% block title %}Accueil - ChainSign AI{% endblock %}
+
+{% block content %}
+
++
+<nav class="navbar navbar-expand-lg navbar-custom">
+
+    <div class="container-fluid px-4">
+
+        <!-- LOGO A GAUCHE -->
+
+        <a href="{% url 'home' %}" class="brand">
+            <i class="bi bi-shield-check"></i>
+            Chain<span>Sign</span> AI
+        </a>
+
+        <button class="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarContent">
+
+            <!-- BOUTONS A DROITE -->
+
+            <div class="ms-auto d-flex align-items-center">
+
+                <a href="{% url 'login' %}" class="btn-auth">
+                    Se connecter
+                </a>
+
+
+            </div>
+
+        </div>
+
+    </div>
+
+</nav>
+
+<section class="hero-section">
+    <div class="container">
+        <div class="row align-items-center min-vh-75 py-5">
+
+            <div class="col-lg-6">
+                <div class="badge-soft mb-4">
+                    <i class="bi bi-shield-check me-2"></i>
+                    Sécurité • Traçabilité • Intelligence
+                </div>
+
+                <h1 class="hero-title mb-4">
+                    Sécurisez vos documents avec la 
+                    <span>Blockchain & l’IA</span>
+                </h1>
+
+                <p class="hero-text mb-4">
+                    Plateforme de signature électronique sécurisée, traçable et intelligente.
+                    ChainSign AI permet de signer, vérifier et auditer vos documents PDF grâce
+                    au chiffrement, à la blockchain et à l’analyse de risque par intelligence artificielle.
+                </p>
+
+                <div class="d-flex flex-wrap gap-3 mb-4">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg px-4">
+                            <i class="bi bi-speedometer2 me-2"></i>
+                            Tableau de bord
+                        </a>
+                    {% else %}
+                        <a href="{% url 'login' %}" class="btn btn-primary btn-lg px-4">
+                            <i class="bi bi-pen me-2"></i>
+                            Signer un document
+                        </a>
+                        <a href="{% url 'login' %}" class="btn btn-outline-primary btn-lg px-4">
+                            <i class="bi bi-search me-2"></i>
+                            Vérifier un PDF
+                        </a>
+                    {% endif %}
+                </div>
+
+                <div class="small text-muted d-flex align-items-center">
+                    <i class="bi bi-shield-lock text-primary me-2"></i>
+                    Sécurisé par SHA-256, ECDSA, blockchain locale et analyse IA.
+                </div>
+            </div>
+
+            <div class="col-lg-6 text-center mt-5 mt-lg-0">
+                <div class="hero-visual">
+                    <div class="blockchain-node node-1"></div>
+                    <div class="blockchain-node node-2"></div>
+                    <div class="blockchain-node node-3"></div>
+                    <div class="blockchain-node node-4"></div>
+
+                    <div class="platform-card">
+                        <div class="document-card">
+                            <div class="doc-line w-25"></div>
+                            <div class="doc-line w-75"></div>
+                            <div class="doc-line w-100"></div>
+                            <div class="doc-line w-75"></div>
+                            <div class="doc-signature">A. K.</div>
+                        </div>
+
+                        <div class="shield-card">
+                            <i class="bi bi-lock-fill"></i>
+                        </div>
+
+                        <div class="check-card">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<section class="container my-5">
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <div class="feature-card h-100">
+                <div class="feature-icon">
+                    <i class="bi bi-shield-lock"></i>
+                </div>
+                <h5>Sécurité cryptographique</h5>
+                <p>
+                    Les documents sont protégés par le calcul SHA-256 et une signature numérique
+                    ECDSA garantissant l’intégrité et l’authenticité.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card h-100">
+                <div class="feature-icon">
+                    <i class="bi bi-link-45deg"></i>
+                </div>
+                <h5>Traçabilité blockchain</h5>
+                <p>
+                    Chaque signature est enregistrée sur une blockchain locale afin de conserver
+                    une preuve immuable, transparente et vérifiable.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="feature-card h-100">
+                <div class="feature-icon">
+                    <i class="bi bi-cpu"></i>
+                </div>
+                <h5>Analyse IA</h5>
+                <p>
+                    Un module expérimental d’intelligence artificielle calcule un score de risque
+                    pour détecter les anomalies documentaires.
+                </p>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<section class="process-section py-5">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 class="fw-bold">Comment fonctionne ChainSign AI ?</h2>
+            <p class="text-muted">
+                Un processus simple pour signer, tracer, vérifier et générer une preuve.
+            </p>
+        </div>
+
+        <div class="row g-4">
+
+            <div class="col-md-3">
+                <div class="step-card">
+                    <span>01</span>
+                    <i class="bi bi-file-earmark-pdf"></i>
+                    <h6>Téléversement</h6>
+                    <p>Import du document PDF à sécuriser.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="step-card">
+                    <span>02</span>
+                    <i class="bi bi-pen"></i>
+                    <h6>Signature</h6>
+                    <p>Ajout de la signature manuscrite et numérique.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="step-card">
+                    <span>03</span>
+                    <i class="bi bi-box"></i>
+                    <h6>Blockchain & IA</h6>
+                    <p>Enregistrement blockchain et calcul du score de risque.</p>
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <div class="step-card">
+                    <span>04</span>
+                    <i class="bi bi-patch-check"></i>
+                    <h6>Vérification</h6>
+                    <p>Contrôle de l’intégrité et génération du paquet de preuve.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<style>
+    :root {
+        --primary-blue: #0057D9;
+        --dark-blue: #071B3A;
+        --soft-bg: #F5F8FC;
+        --border-color: #DDE7F5;
+    }
+
+    .hero-section {
+        background:
+            radial-gradient(circle at 75% 30%, rgba(0, 87, 217, 0.16), transparent 35%),
+            linear-gradient(135deg, #ffffff 0%, #f4f8ff 100%);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .min-vh-75 {
+        min-height: 75vh;
+    }
+
+    .badge-soft {
+        display: inline-flex;
+        align-items: center;
+        padding: 10px 18px;
+        border-radius: 999px;
+        background: #EEF5FF;
+        color: var(--primary-blue);
+        border: 1px solid #CFE0FF;
+        font-weight: 600;
+    }
+
+    .hero-title {
+        font-size: clamp(2.4rem, 5vw, 4.5rem);
+        font-weight: 800;
+        line-height: 1.1;
+        color: #081225;
+        letter-spacing: -1px;
+    }
+
+    .hero-title span {
+        color: var(--primary-blue);
+    }
+
+    .hero-text {
+        font-size: 1.15rem;
+        color: #526175;
+        max-width: 620px;
+        line-height: 1.8;
+    }
+
+    .btn-primary {
+        background: var(--primary-blue);
+        border-color: var(--primary-blue);
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0, 87, 217, 0.25);
+    }
+
+    .btn-outline-primary {
+        border-radius: 12px;
+        color: var(--primary-blue);
+        border-color: var(--primary-blue);
+    }
+
+    .hero-visual {
+        position: relative;
+        height: 430px;
+    }
+
+    .platform-card {
+        position: absolute;
+        inset: 70px 40px 30px 40px;
+        border-radius: 42px;
+        background: linear-gradient(145deg, #0057D9, #003FAD);
+        box-shadow: 0 35px 80px rgba(0, 87, 217, 0.35);
+        transform: perspective(900px) rotateX(55deg) rotateZ(-8deg);
+    }
+
+    .platform-card::before {
+        content: "";
+        position: absolute;
+        inset: 25px;
+        border-radius: 30px;
+        border: 3px solid rgba(255, 255, 255, 0.35);
+        box-shadow: inset 0 0 25px rgba(255, 255, 255, 0.35);
+    }
+
+    .document-card {
+        position: absolute;
+        width: 220px;
+        height: 270px;
+        background: white;
+        border-radius: 22px;
+        padding: 32px 24px;
+        top: -105px;
+        left: 135px;
+        transform: rotateZ(8deg) rotateX(-55deg);
+        box-shadow: 0 30px 60px rgba(9, 30, 66, 0.18);
+    }
+
+    .doc-line {
+        height: 8px;
+        border-radius: 10px;
+        background: #AFC4EA;
+        margin-bottom: 16px;
+    }
+
+    .doc-line:first-child {
+        background: var(--primary-blue);
+    }
+
+    .doc-signature {
+        margin-top: 35px;
+        font-size: 2rem;
+        color: var(--primary-blue);
+        font-family: cursive;
+        border-bottom: 3px solid var(--primary-blue);
+        display: inline-block;
+    }
+
+    .shield-card {
+        position: absolute;
+        width: 110px;
+        height: 110px;
+        border-radius: 28px;
+        background: linear-gradient(145deg, #0B6CFF, #003FAD);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 44px;
+        top: 105px;
+        left: 80px;
+        transform: rotateX(-55deg);
+        box-shadow: 0 20px 40px rgba(0, 87, 217, 0.35);
+    }
+
+    .check-card {
+        position: absolute;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: var(--primary-blue);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 30px;
+        top: -85px;
+        right: 120px;
+        transform: rotateX(-55deg);
+        box-shadow: 0 12px 30px rgba(0, 87, 217, 0.3);
+    }
+
+    .blockchain-node {
+        position: absolute;
+        width: 55px;
+        height: 55px;
+        border-radius: 14px;
+        background: linear-gradient(145deg, #4DA3FF, #0057D9);
+        box-shadow: 0 15px 35px rgba(0, 87, 217, 0.35);
+    }
+
+    .node-1 { top: 80px; left: 70px; }
+    .node-2 { top: 120px; right: 90px; }
+    .node-3 { bottom: 80px; left: 25px; }
+    .node-4 { bottom: 55px; right: 45px; }
+
+    .feature-card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 22px;
+        padding: 35px;
+        box-shadow: 0 15px 35px rgba(9, 30, 66, 0.06);
+        transition: 0.25s ease;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 24px 50px rgba(9, 30, 66, 0.1);
+    }
+
+    .feature-icon {
+        width: 78px;
+        height: 78px;
+        border-radius: 24px;
+        background: #EEF5FF;
+        color: var(--primary-blue);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 36px;
+        margin-bottom: 22px;
+    }
+
+    .feature-card h5 {
+        font-weight: 700;
+        color: #081225;
+        margin-bottom: 12px;
+    }
+
+    .feature-card p {
+        color: #617086;
+        line-height: 1.7;
+        margin-bottom: 0;
+    }
+
+    .process-section {
+        background: var(--soft-bg);
+    }
+
+    .step-card {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 28px;
+        height: 100%;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(9, 30, 66, 0.05);
+    }
+
+    .step-card span {
+        display: inline-block;
+        color: var(--primary-blue);
+        font-weight: 800;
+        margin-bottom: 12px;
+    }
+
+    .step-card i {
+        display: block;
+        font-size: 38px;
+        color: var(--primary-blue);
+        margin-bottom: 15px;
+    }
+
+    .step-card h6 {
+        font-weight: 700;
+        color: #081225;
+    }
+
+    .step-card p {
+        color: #617086;
+        margin-bottom: 0;
+        font-size: 0.95rem;
+    }
+
+    @media (max-width: 991px) {
+        .hero-visual {
+            height: 330px;
+        }
+
+        .platform-card {
+            inset: 55px 20px 30px 20px;
+        }
+
+        .document-card {
+            left: 110px;
+            width: 180px;
+            height: 230px;
+        }
+    }
+</style>
+
+{% endblock %}

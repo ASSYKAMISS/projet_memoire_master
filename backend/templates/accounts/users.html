@@ -1,0 +1,167 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Gestion utilisateurs - ChainSign AI{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-people-fill text-primary me-2"></i>
+                {{ titre_page }}
+            </h2>
+            <p class="text-muted mb-0">
+                {% if request.user.is_superuser %}
+                    Créez, consultez, modifiez les rôles et désactivez les comptes.
+                {% else %}
+                    Consultez et gérez uniquement les agents que vous avez créés.
+                {% endif %}
+            </p>
+        </div>
+
+        <a href="{% url 'create_user' %}" class="btn btn-primary">
+            <i class="bi bi-person-plus me-1"></i>
+            {% if request.user.is_superuser %}Créer utilisateur{% else %}Créer agent{% endif %}
+        </a>
+    </div>
+
+    <div class="users-card">
+
+        {% if users %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Utilisateur</th>
+                        <th>Email</th>
+                        <th>Rôle</th>
+                        <th>Statut</th>
+                        <th>Date création</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>
+                            <div class="user-cell">
+                                <div class="avatar">{{ u.username|first|upper }}</div>
+                                <div>
+                                    <strong>{{ u.username }}</strong>
+                                    <small>{{ u.first_name }} {{ u.last_name }}</small>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>{{ u.email|default:"-" }}</td>
+
+                        <td>
+                            {% if request.user.is_superuser %}
+                                <form method="POST" action="{% url 'change_user_role' u.id %}">
+                                    {% csrf_token %}
+                                    <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
+                                        <option value="AGENT" {% if u.profil.role == 'AGENT' %}selected{% endif %}>Agent</option>
+                                        <option value="RESPONSABLE" {% if u.profil.role == 'RESPONSABLE' %}selected{% endif %}>Responsable</option>
+                                    </select>
+                                </form>
+                            {% else %}
+                                <span class="role-badge">{{ u.profil.get_role_display }}</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if u.is_active %}
+                                <span class="status active">Actif</span>
+                            {% else %}
+                                <span class="status inactive">Désactivé</span>
+                            {% endif %}
+                        </td>
+
+                        <td>{{ u.date_joined|date:"d/m/Y" }}</td>
+
+                        <td class="text-end">
+                            {% if u != request.user %}
+                                <a href="{% url 'toggle_user_status' u.id %}" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                    {% if u.is_active %}Désactiver{% else %}Activer{% endif %}
+                                </a>
+                            {% else %}
+                                <span class="text-muted small">Compte actuel</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+        {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-people text-muted" style="font-size:70px;"></i>
+                <h5 class="fw-bold mt-3">Aucun utilisateur</h5>
+            </div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+<style>
+.users-card {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 22px;
+    padding: 28px;
+    box-shadow: 0 12px 35px rgba(9,30,66,.06);
+}
+
+.user-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: #0057D9;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 800;
+}
+
+.user-cell small {
+    display: block;
+    color: #64748B;
+}
+
+.role-badge,
+.status {
+    padding: 7px 12px;
+    border-radius: 999px;
+    font-size: .82rem;
+    font-weight: 700;
+}
+
+.role-badge {
+    background: #EAF2FF;
+    color: #0057D9;
+}
+
+.status.active {
+    background: #DCFCE7;
+    color: #15803D;
+}
+
+.status.inactive {
+    background: #FEE2E2;
+    color: #B91C1C;
+}
+</style>
+
+{% endblock %}

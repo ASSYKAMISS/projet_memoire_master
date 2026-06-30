@@ -1,0 +1,884 @@
+﻿{% extends 'base.html' %}
+
+{% block title %}Signature manuscrite - ChainSign AI{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="workflow-card mb-4">
+        <div class="badge-title">SIGNATURE MANUSCRITE</div>
+
+        <div class="steps">
+
+            <div class="step-line"></div>
+
+            <div class="step active">
+                <div class="step-icon"><i class="bi bi-pen"></i></div>
+                <span>Signature manuscrite</span>
+            </div>
+
+            <div class="step-line"></div>
+
+              <div class="step">
+                <div class="step-number">5</div>
+                <span>Blockchain</span>
+            </div>
+
+            <div class="step-line"></div>
+              <div class="step">
+                <div class="step-number">5</div>
+                <span>Document SignÃ©</span>
+            </div>
+
+          
+        </div>
+    </div>
+
+    <form method="POST" enctype="multipart/form-data" id="signatureForm">
+        {% csrf_token %}
+
+        <input type="hidden" name="signature_source" id="signatureSource">
+        <input type="hidden" name="signature_data" id="signatureData">
+        <input type="hidden" name="position_x" id="positionX" value="80">
+        <input type="hidden" name="position_y" id="positionY" value="120">
+        <input type="hidden" name="largeur" id="signatureWidth" value="180">
+        <input type="hidden" name="hauteur" id="signatureHeight" value="80">
+        <input type="hidden" name="pdf_scale" id="pdfScale" value="1.25">
+
+        <div class="row g-4">
+
+            <div class="col-lg-4">
+                <div class="info-panel h-100">
+                    <div class="document-icon">
+                        <i class="bi bi-file-earmark-pdf"></i>
+                    </div>
+
+                    <h4 class="fw-bold mt-4">{{ document.titre }}</h4>
+
+                    <p class="text-muted">
+                        Dessinez ou importez votre signature, puis placez-la sur le document.
+                    </p>
+
+                    <div class="doc-info mt-4">
+                        <div>
+                            <span>Statut</span>
+                            <strong>{{ document.get_statut_display }}</strong>
+                        </div>
+
+                        <div>
+                            <span>Date dÃ©pÃ´t</span>
+                            <strong>{{ document.date_upload|date:"d/m/Y" }}</strong>
+                        </div>
+
+                        <div>
+                            <span>DÃ©posÃ© par</span>
+                            <strong>
+                                {% if document.utilisateur.first_name or document.utilisateur.last_name %}
+                                    {{ document.utilisateur.first_name }} {{ document.utilisateur.last_name }}
+                                {% else %}
+                                    {{ document.utilisateur.username }}
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>Empreinte SHA-256</span>
+                            <small>{{ document.hash_original|truncatechars:32 }}</small>
+                        </div>
+                    </div>
+
+                    <div class="security-note mt-4">
+                        <i class="bi bi-shield-check"></i>
+                       <p>
+    AprÃ¨s validation, le systÃ¨me gÃ©nÃ¨re automatiquement la signature numÃ©rique ECDSA,
+    produit le document signÃ© et enregistre sa preuve sur la blockchain.
+</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+
+                <div class="access-card mb-4">
+                    <div class="card-title-box mb-4">
+                        <div class="icon-box">
+                            <i class="bi bi-file-earmark-pdf"></i>
+                        </div>
+
+                        <div>
+                            <h5 class="fw-bold mb-1">AperÃ§u du document</h5>
+                            <p class="text-muted mb-0 small">
+                                Cliquez sur le document pour positionner votre signature.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="pdf-toolbar mb-3">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="prevPage">
+                            <i class="bi bi-chevron-left"></i>
+                            PrÃ©cÃ©dent
+                        </button>
+
+                        <span class="page-indicator">
+                            Page <strong id="pageNum">1</strong> / <strong id="pageCount">1</strong>
+                        </span>
+
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="nextPage">
+                            Suivant
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="pdf-wrapper" id="pdfWrapper">
+                        <canvas id="pdfCanvas"></canvas>
+
+                        <img id="signaturePreview"
+                             class="signature-preview d-none"
+                             src=""
+                             alt="Signature">
+                    </div>
+
+                    <div class="empty-box mt-3">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Placement de la signature</strong>
+                        <p>
+                            AprÃ¨s avoir dessinÃ© ou importÃ© la signature, cliquez sur le PDF pour la placer.
+                            Vous pouvez ensuite la dÃ©placer avec la souris.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="access-card">
+                    <div class="card-title-box mb-4">
+                        <div class="icon-box">
+                            <i class="bi bi-vector-pen"></i>
+                        </div>
+
+                        <div>
+                            <h5 class="fw-bold mb-1">CrÃ©er votre signature</h5>
+                            <p class="text-muted mb-0 small">
+                                Choisissez entre dessiner une signature ou importer une image.
+                            </p>
+                        </div>
+                    </div>
+
+                    <ul class="nav nav-pills signature-tabs mb-4" role="tablist">
+                        <li class="nav-item w-50">
+                            <button class="nav-link active w-100"
+                                    data-bs-toggle="pill"
+                                    data-bs-target="#draw-pane"
+                                    type="button">
+                                <i class="bi bi-pencil me-1"></i>
+                                Dessiner
+                            </button>
+                        </li>
+
+                        <li class="nav-item w-50">
+                            <button class="nav-link w-100"
+                                    data-bs-toggle="pill"
+                                    data-bs-target="#upload-pane"
+                                    type="button">
+                                <i class="bi bi-image me-1"></i>
+                                Importer
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+
+                        <div class="tab-pane fade show active" id="draw-pane">
+                            <div class="draw-box">
+                                <canvas id="drawCanvas"></canvas>
+                            </div>
+
+                            <div class="d-flex gap-2 mt-3">
+                                <button type="button" class="btn btn-outline-secondary w-50" id="clearSignature">
+                                    <i class="bi bi-eraser me-1"></i>
+                                    Effacer
+                                </button>
+
+                                <button type="button" class="btn btn-outline-primary w-50" id="useDrawSignature">
+                                    <i class="bi bi-check-circle me-1"></i>
+                                    Utiliser
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="upload-pane">
+                            <div class="upload-signature-box">
+                                <i class="bi bi-image"></i>
+                                <strong>Importer une signature</strong>
+                                <p>Format recommandÃ© : PNG ou JPG.</p>
+
+                                <input type="file"
+                                       name="signature_file"
+                                       id="signatureFile"
+                                       accept="image/png,image/jpeg,image/jpg">
+
+                                <label for="signatureFile" class="btn btn-outline-primary btn-sm">
+                                    Choisir une image
+                                </label>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="size-control mt-4">
+                        <label class="form-label fw-semibold">
+                            Taille de la signature
+                        </label>
+
+                        <input type="range"
+                               class="form-range"
+                               id="sizeRange"
+                               min="100"
+                               max="280"
+                               value="180">
+                    </div>
+
+                    <div class="position-box mt-4">
+                        <div>
+                            <span>Position X</span>
+                            <strong id="displayX">80</strong>
+                        </div>
+
+                        <div>
+                            <span>Position Y</span>
+                            <strong id="displayY">120</strong>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="bottom-actions mt-4">
+            <a href="{% url 'documents_to_sign' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-2"></i>
+                Retour
+            </a>
+
+            <button type="submit" class="btn btn-primary btn-lg">
+                Valider la signature
+                <i class="bi bi-arrow-right ms-2"></i>
+            </button>
+        </div>
+
+    </form>
+
+</div>
+
+<style>
+.workflow-card,
+.info-panel,
+.access-card {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 22px;
+    padding: 28px;
+    box-shadow: 0 12px 35px rgba(9, 30, 66, 0.06);
+}
+
+.badge-title {
+    display: inline-block;
+    background: #0057D9;
+    color: white;
+    font-weight: 800;
+    padding: 8px 16px;
+    border-radius: 8px;
+    margin-bottom: 28px;
+}
+
+.steps {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.step {
+    text-align: center;
+    color: #64748B;
+    font-weight: 600;
+    font-size: 0.9rem;
+    min-width: 120px;
+}
+
+.step-icon,
+.step-number {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    border: 1px solid #BBD3FF;
+    background: #F3F7FF;
+    color: #0057D9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-size: 24px;
+}
+
+.step.active .step-icon,
+.step.active .step-number {
+    background: #0057D9;
+    color: white;
+    box-shadow: 0 12px 25px rgba(0, 87, 217, 0.25);
+}
+
+.step.done .step-icon {
+    background: #DCFCE7;
+    color: #15803D;
+    border-color: #BBF7D0;
+}
+
+.step-line {
+    height: 3px;
+    flex: 1;
+    background: linear-gradient(90deg, #0057D9, #8BB8FF);
+    border-radius: 999px;
+    margin-bottom: 30px;
+}
+
+.document-icon {
+    width: 76px;
+    height: 76px;
+    border-radius: 24px;
+    background: #FEE2E2;
+    color: #DC2626;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+.doc-info {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.doc-info div {
+    background: #F8FBFF;
+    border: 1px solid #E4EBF5;
+    border-radius: 14px;
+    padding: 13px 15px;
+}
+
+.doc-info span {
+    display: block;
+    color: #64748B;
+    font-size: .82rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.doc-info strong {
+    color: #071B3A;
+}
+
+.doc-info small {
+    color: #334155;
+    word-break: break-all;
+}
+
+.security-note {
+    display: flex;
+    gap: 12px;
+    background: #EEF5FF;
+    border: 1px solid #CFE0FF;
+    border-radius: 16px;
+    padding: 16px;
+}
+
+.security-note i {
+    color: #0057D9;
+    font-size: 24px;
+}
+
+.security-note p {
+    margin: 0;
+    color: #526175;
+    font-weight: 600;
+}
+
+.card-title-box {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.icon-box {
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background: #EAF2FF;
+    color: #0057D9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem;
+}
+
+.pdf-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #F8FBFF;
+    border: 1px solid #E4EBF5;
+    border-radius: 16px;
+    padding: 12px;
+}
+
+.page-indicator {
+    color: #334155;
+    font-weight: 700;
+}
+
+.pdf-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 640px;
+    background: #F1F5F9;
+    border: 1px solid #E4EBF5;
+    border-radius: 20px;
+    overflow: auto;
+    text-align: center;
+    padding: 20px;
+}
+
+#pdfCanvas {
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 15px 40px rgba(15, 23, 42, .12);
+}
+
+.signature-preview {
+    position: absolute;
+    top: 120px;
+    left: 80px;
+    width: 180px;
+    height: 80px;
+    object-fit: contain;
+    cursor: move;
+    border: 2px dashed #0057D9;
+    border-radius: 10px;
+    background: rgba(255,255,255,.75);
+    padding: 4px;
+    z-index: 5;
+}
+
+.empty-box {
+    text-align: center;
+    padding: 22px 20px;
+    border: 1px dashed #BBD3FF;
+    border-radius: 18px;
+    background: #F8FBFF;
+    color: #64748B;
+}
+
+.empty-box i {
+    display: block;
+    color: #0057D9;
+    font-size: 34px;
+    margin-bottom: 8px;
+}
+
+.empty-box strong {
+    color: #071B3A;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.empty-box p {
+    margin: 0;
+}
+
+.signature-tabs {
+    background: #F8FBFF;
+    border: 1px solid #E4EBF5;
+    border-radius: 14px;
+    padding: 5px;
+}
+
+.signature-tabs .nav-link {
+    border-radius: 10px;
+    color: #64748B;
+    font-weight: 800;
+}
+
+.signature-tabs .nav-link.active {
+    background: #0057D9;
+    color: white;
+}
+
+.draw-box {
+    height: 180px;
+    border: 2px dashed #BBD3FF;
+    border-radius: 18px;
+    background: white;
+    overflow: hidden;
+}
+
+#drawCanvas {
+    width: 100%;
+    height: 180px;
+    cursor: crosshair;
+}
+
+.upload-signature-box {
+    border: 2px dashed #BBD3FF;
+    border-radius: 18px;
+    background: #F8FBFF;
+    padding: 35px 20px;
+    text-align: center;
+}
+
+.upload-signature-box i {
+    display: block;
+    font-size: 42px;
+    color: #0057D9;
+    margin-bottom: 10px;
+}
+
+.upload-signature-box p {
+    color: #64748B;
+    margin: 6px 0 12px;
+}
+
+.upload-signature-box input[type="file"] {
+    display: none;
+}
+
+.position-box {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.position-box div {
+    background: #F8FBFF;
+    border: 1px solid #E4EBF5;
+    border-radius: 14px;
+    padding: 12px;
+}
+
+.position-box span {
+    display: block;
+    color: #64748B;
+    font-size: .78rem;
+    font-weight: 800;
+}
+
+.position-box strong {
+    color: #0057D9;
+    font-size: 1.2rem;
+}
+
+.bottom-actions {
+    background: white;
+    border: 1px solid #E4EBF5;
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    box-shadow: 0 12px 35px rgba(9, 30, 66, 0.06);
+}
+
+@media (max-width: 992px) {
+    .steps {
+        overflow-x: auto;
+        justify-content: flex-start;
+        padding-bottom: 10px;
+    }
+
+    .step-line {
+        min-width: 60px;
+    }
+
+    .bottom-actions {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .pdf-wrapper {
+        min-height: 420px;
+    }
+}
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+<script>
+const pdfUrl = "{{ document.fichier_original.url }}";
+
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+    "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+let pdfDoc = null;
+let pageNum = 1;
+let pageRendering = false;
+let pageNumPending = null;
+
+const scale = 1.25;
+document.getElementById('pdfScale').value = scale;
+const pdfCanvas = document.getElementById('pdfCanvas');
+const pdfCtx = pdfCanvas.getContext('2d');
+
+const signaturePreview = document.getElementById('signaturePreview');
+const pdfWrapper = document.getElementById('pdfWrapper');
+
+const positionX = document.getElementById('positionX');
+const positionY = document.getElementById('positionY');
+const signatureWidth = document.getElementById('signatureWidth');
+const signatureHeight = document.getElementById('signatureHeight');
+
+const displayX = document.getElementById('displayX');
+const displayY = document.getElementById('displayY');
+
+const signatureSource = document.getElementById('signatureSource');
+const signatureData = document.getElementById('signatureData');
+
+function renderPage(num) {
+    pageRendering = true;
+
+    pdfDoc.getPage(num).then(function(page) {
+        const viewport = page.getViewport({ scale: scale });
+
+        pdfCanvas.height = viewport.height;
+        pdfCanvas.width = viewport.width;
+
+        const renderContext = {
+            canvasContext: pdfCtx,
+            viewport: viewport
+        };
+
+        const renderTask = page.render(renderContext);
+
+        renderTask.promise.then(function() {
+            pageRendering = false;
+
+            if (pageNumPending !== null) {
+                renderPage(pageNumPending);
+                pageNumPending = null;
+            }
+        });
+    });
+
+    document.getElementById('pageNum').textContent = num;
+}
+
+function queueRenderPage(num) {
+    if (pageRendering) {
+        pageNumPending = num;
+    } else {
+        renderPage(num);
+    }
+}
+
+document.getElementById('prevPage').addEventListener('click', function() {
+    if (pageNum <= 1) return;
+    pageNum--;
+    queueRenderPage(pageNum);
+});
+
+document.getElementById('nextPage').addEventListener('click', function() {
+    if (pageNum >= pdfDoc.numPages) return;
+    pageNum++;
+    queueRenderPage(pageNum);
+});
+
+pdfjsLib.getDocument(pdfUrl).promise.then(function(pdfDoc_) {
+    pdfDoc = pdfDoc_;
+    document.getElementById('pageCount').textContent = pdfDoc.numPages;
+    renderPage(pageNum);
+});
+
+const drawCanvas = document.getElementById('drawCanvas');
+const drawCtx = drawCanvas.getContext('2d');
+
+function resizeDrawCanvas() {
+    drawCanvas.width = drawCanvas.offsetWidth;
+    drawCanvas.height = 180;
+
+    drawCtx.lineWidth = 3;
+    drawCtx.lineCap = 'round';
+    drawCtx.strokeStyle = '#071B3A';
+}
+
+resizeDrawCanvas();
+
+let drawing = false;
+
+function getDrawPosition(event) {
+    const rect = drawCanvas.getBoundingClientRect();
+
+    if (event.touches && event.touches.length > 0) {
+        return {
+            x: event.touches[0].clientX - rect.left,
+            y: event.touches[0].clientY - rect.top
+        };
+    }
+
+    return {
+        x: event.clientX - rect.left,
+        y: event.clientY - rect.top
+    };
+}
+
+function startDraw(event) {
+    event.preventDefault();
+    drawing = true;
+
+    const pos = getDrawPosition(event);
+    drawCtx.beginPath();
+    drawCtx.moveTo(pos.x, pos.y);
+}
+
+function draw(event) {
+    if (!drawing) return;
+    event.preventDefault();
+
+    const pos = getDrawPosition(event);
+    drawCtx.lineTo(pos.x, pos.y);
+    drawCtx.stroke();
+}
+
+function stopDraw(event) {
+    event.preventDefault();
+    drawing = false;
+}
+
+drawCanvas.addEventListener('mousedown', startDraw);
+drawCanvas.addEventListener('mousemove', draw);
+drawCanvas.addEventListener('mouseup', stopDraw);
+drawCanvas.addEventListener('mouseleave', stopDraw);
+drawCanvas.addEventListener('touchstart', startDraw);
+drawCanvas.addEventListener('touchmove', draw);
+drawCanvas.addEventListener('touchend', stopDraw);
+
+document.getElementById('clearSignature').addEventListener('click', function() {
+    drawCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+    signaturePreview.classList.add('d-none');
+    signatureData.value = '';
+    signatureSource.value = '';
+});
+
+document.getElementById('useDrawSignature').addEventListener('click', function() {
+    const dataUrl = drawCanvas.toDataURL('image/png');
+
+    signaturePreview.src = dataUrl;
+    signaturePreview.classList.remove('d-none');
+
+    signatureData.value = dataUrl;
+    signatureSource.value = 'draw';
+});
+
+document.getElementById('signatureFile').addEventListener('change', function() {
+    const file = this.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        signaturePreview.src = e.target.result;
+        signaturePreview.classList.remove('d-none');
+
+        signatureSource.value = 'upload';
+        signatureData.value = '';
+    };
+
+    reader.readAsDataURL(file);
+});
+
+pdfWrapper.addEventListener('click', function(e) {
+    if (!signaturePreview.src) return;
+
+    const wrapperRect = pdfWrapper.getBoundingClientRect();
+    const canvasRect = pdfCanvas.getBoundingClientRect();
+
+    const x = e.clientX - canvasRect.left;
+    const y = e.clientY - canvasRect.top;
+
+    const left = e.clientX - wrapperRect.left + pdfWrapper.scrollLeft;
+    const top = e.clientY - wrapperRect.top + pdfWrapper.scrollTop;
+
+    signaturePreview.style.left = left + 'px';
+    signaturePreview.style.top = top + 'px';
+
+    positionX.value = Math.round(x);
+    positionY.value = Math.round(y);
+    displayX.textContent = Math.round(x);
+    displayY.textContent = Math.round(y);
+});
+
+let dragging = false;
+let offsetX = 0;
+let offsetY = 0;
+
+signaturePreview.addEventListener('mousedown', function(e) {
+    dragging = true;
+
+    const rect = signaturePreview.getBoundingClientRect();
+    offsetX = e.clientX - rect.left;
+    offsetY = e.clientY - rect.top;
+
+    e.preventDefault();
+});
+
+document.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+
+    const wrapperRect = pdfWrapper.getBoundingClientRect();
+    const canvasRect = pdfCanvas.getBoundingClientRect();
+
+    const left = e.clientX - wrapperRect.left - offsetX + pdfWrapper.scrollLeft;
+    const top = e.clientY - wrapperRect.top - offsetY + pdfWrapper.scrollTop;
+
+    signaturePreview.style.left = left + 'px';
+    signaturePreview.style.top = top + 'px';
+
+    const x = e.clientX - canvasRect.left - offsetX;
+    const y = e.clientY - canvasRect.top - offsetY;
+
+    positionX.value = Math.round(x);
+    positionY.value = Math.round(y);
+    displayX.textContent = Math.round(x);
+    displayY.textContent = Math.round(y);
+});
+
+document.addEventListener('mouseup', function() {
+    dragging = false;
+});
+
+document.getElementById('sizeRange').addEventListener('input', function() {
+    const width = parseInt(this.value);
+    const height = Math.round(width * 0.45);
+
+    signaturePreview.style.width = width + 'px';
+    signaturePreview.style.height = height + 'px';
+
+    signatureWidth.value = width;
+    signatureHeight.value = height;
+});
+
+document.getElementById('signatureForm').addEventListener('submit', function(e) {
+    if (!signatureSource.value) {
+        e.preventDefault();
+        alert("Veuillez dessiner ou importer une signature avant de valider.");
+        return;
+    }
+
+    if (signaturePreview.classList.contains('d-none')) {
+        e.preventDefault();
+        alert("Veuillez placer la signature sur le document.");
+        return;
+    }
+});
+</script>
+
+{% endblock %}
+

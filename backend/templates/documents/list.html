@@ -1,0 +1,372 @@
+{% extends 'base.html' %}
+
+{% block title %}Mes Documents - ChainSign AI{% endblock %}
+
+{% block content %}
+
+<div class="container my-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-file-earmark-text text-primary me-2"></i>
+                Mes Documents
+            </h2>
+            <p class="text-muted mb-0">
+                Consultez tous vos documents, leurs signatures, leur statut blockchain et leur score IA.
+            </p>
+        </div>
+
+        <a href="{% url 'upload_document' %}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>
+            Nouveau document
+        </a>
+    </div>
+
+    <div class="documents-card">
+
+        <div class="documents-toolbar">
+            <div class="search-box">
+                <i class="bi bi-search"></i>
+                <input type="text" placeholder="Rechercher un document...">
+            </div>
+
+            <select class="form-select status-filter">
+                <option>Tous les statuts</option>
+                <option>Brouillon</option>
+                <option>Signé</option>
+                <option>Vérifié</option>
+                <option>Invalide</option>
+            </select>
+        </div>
+
+        {% if documents %}
+        <div class="table-responsive">
+            <table class="table documents-table align-middle">
+                <thead>
+                    <tr>
+                        <th>Document</th>
+                        <th>Hash SHA-256</th>
+                        <th>Date upload</th>
+                        <th>Statut</th>
+                        <th>Blockchain</th>
+                        <th>Score IA</th>
+                        <th class="text-end">Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for document in documents %}
+                    <tr>
+                        <td>
+                            <div class="doc-info">
+                                <div class="pdf-icon">PDF</div>
+                                <div>
+                                    <strong>{{ document.titre }}</strong>
+                                    <small>Propriétaire : {{ document.utilisateur.username }}</small>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            {% if document.hash_original %}
+                                <code>{{ document.hash_original|slice:":12" }}...{{ document.hash_original|slice:"-6:" }}</code>
+                            {% else %}
+                                <span class="text-muted">Non généré</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <span class="date-main">{{ document.date_upload|date:"d/m/Y" }}</span>
+                            <small class="date-sub">{{ document.date_upload|date:"H:i" }}</small>
+                        </td>
+
+                        <td>
+                            {% if document.statut == 'SIGNE' %}
+                                <span class="status-badge badge-success">Signé</span>
+                            {% elif document.statut == 'VERIFIE' %}
+                                <span class="status-badge badge-info">Vérifié</span>
+                            {% elif document.statut == 'INVALIDE' %}
+                                <span class="status-badge badge-danger">Invalide</span>
+                            {% else %}
+                                <span class="status-badge badge-warning">Brouillon</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if document.audit_blockchain %}
+                                <div class="blockchain-ok">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    Validé
+                                </div>
+                                <small class="text-muted">
+                                    Bloc #{{ document.audit_blockchain.block_number|default:"local" }}
+                                </small>
+                            {% else %}
+                                <div class="blockchain-wait">
+                                    <i class="bi bi-hourglass-split"></i>
+                                    Non enregistré
+                                </div>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if document.score_risque %}
+                                {% if document.score_risque.niveau == 'ELEVE' %}
+                                    <div class="risk risk-high">
+                                        Risque élevé
+                                        <strong>{{ document.score_risque.score|floatformat:0 }}%</strong>
+                                    </div>
+                                {% elif document.score_risque.niveau == 'MOYEN' %}
+                                    <div class="risk risk-medium">
+                                        Risque moyen
+                                        <strong>{{ document.score_risque.score|floatformat:0 }}%</strong>
+                                    </div>
+                                {% else %}
+                                    <div class="risk risk-low">
+                                        Risque faible
+                                        <strong>{{ document.score_risque.score|floatformat:0 }}%</strong>
+                                    </div>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">Non analysé</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end">
+                            <a href="{% url 'document_detail' document.id %}" class="action-btn" title="Voir détails">
+                                <i class="bi bi-eye"></i>
+                            </a>
+
+                            {% if document.fichier_signe %}
+                                <a href="{{ document.fichier_signe.url }}" class="action-btn" title="Télécharger PDF signé">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                            {% else %}
+                                <a href="#" class="action-btn disabled" title="PDF signé non disponible">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                            {% endif %}
+
+                            {% if document.paquet_preuve %}
+                                <a href="{{ document.paquet_preuve.fichier_preuve.url }}" class="action-btn" title="Télécharger preuve">
+                                    <i class="bi bi-box"></i>
+                                </a>
+                            {% else %}
+                                <a href="#" class="action-btn disabled" title="Paquet de preuve non disponible">
+                                    <i class="bi bi-box"></i>
+                                </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% else %}
+        <div class="empty-state">
+            <i class="bi bi-folder2-open"></i>
+            <h5>Aucun document enregistré</h5>
+            <p>Commencez par téléverser un PDF pour générer son empreinte SHA-256.</p>
+            <a href="{% url 'upload_document' %}" class="btn btn-primary">
+                Téléverser un document
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+
+</div>
+
+<style>
+    .documents-card {
+        background: white;
+        border: 1px solid #E4EBF5;
+        border-radius: 22px;
+        padding: 26px;
+        box-shadow: 0 12px 35px rgba(9, 30, 66, 0.06);
+    }
+
+    .documents-toolbar {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 22px;
+    }
+
+    .search-box {
+        flex: 1;
+        position: relative;
+    }
+
+    .search-box i {
+        position: absolute;
+        top: 50%;
+        left: 16px;
+        transform: translateY(-50%);
+        color: #64748B;
+    }
+
+    .search-box input {
+        width: 100%;
+        border: 1px solid #E4EBF5;
+        border-radius: 14px;
+        padding: 12px 16px 12px 44px;
+        outline: none;
+    }
+
+    .search-box input:focus {
+        border-color: #0057D9;
+        box-shadow: 0 0 0 0.18rem rgba(0, 87, 217, 0.12);
+    }
+
+    .status-filter {
+        max-width: 210px;
+    }
+
+    .documents-table th {
+        color: #475569;
+        font-size: 0.85rem;
+        padding: 14px;
+        border-bottom: 1px solid #E4EBF5;
+    }
+
+    .documents-table td {
+        padding: 18px 14px;
+        border-bottom: 1px solid #EEF2F7;
+    }
+
+    .doc-info {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+    }
+
+    .doc-info strong {
+        display: block;
+        color: #071B3A;
+    }
+
+    .doc-info small {
+        color: #64748B;
+    }
+
+    .pdf-icon {
+        background: #DC2626;
+        color: white;
+        font-weight: 800;
+        font-size: 0.72rem;
+        padding: 7px 6px;
+        border-radius: 6px;
+    }
+
+    code {
+        background: #F1F5F9;
+        color: #0057D9;
+        border-radius: 8px;
+        padding: 6px 9px;
+        font-size: 0.85rem;
+    }
+
+    .date-main {
+        display: block;
+        font-weight: 600;
+    }
+
+    .date-sub {
+        color: #64748B;
+    }
+
+    .blockchain-ok {
+        color: #16A34A;
+        font-weight: 700;
+    }
+
+    .blockchain-wait {
+        color: #F59E0B;
+        font-weight: 700;
+    }
+
+    .risk {
+        display: inline-flex;
+        flex-direction: column;
+        padding: 9px 14px;
+        border-radius: 14px;
+        font-size: 0.82rem;
+        font-weight: 700;
+    }
+
+    .risk strong {
+        font-size: 1rem;
+    }
+
+    .risk-low {
+        background: #DCFCE7;
+        color: #15803D;
+    }
+
+    .risk-medium {
+        background: #FEF3C7;
+        color: #B45309;
+    }
+
+    .risk-high {
+        background: #FEE2E2;
+        color: #B91C1C;
+    }
+
+    .action-btn {
+        width: 36px;
+        height: 36px;
+        border: 1px solid #DDE7F5;
+        border-radius: 10px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #0057D9;
+        text-decoration: none;
+        margin-left: 6px;
+        background: white;
+    }
+
+    .action-btn:hover {
+        background: #EEF5FF;
+    }
+
+    .action-btn.disabled {
+        opacity: 0.4;
+        pointer-events: none;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 70px 20px;
+    }
+
+    .empty-state i {
+        font-size: 75px;
+        color: #94A3B8;
+    }
+
+    .empty-state h5 {
+        font-weight: 800;
+        margin-top: 18px;
+    }
+
+    .empty-state p {
+        color: #64748B;
+    }
+
+    @media (max-width: 768px) {
+        .documents-toolbar {
+            flex-direction: column;
+        }
+
+        .status-filter {
+            max-width: 100%;
+        }
+    }
+</style>
+
+{% endblock %}
