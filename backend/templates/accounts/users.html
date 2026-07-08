@@ -1,167 +1,143 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
 {% block title %}Gestion utilisateurs - ChainSign AI{% endblock %}
+{% block page_title %}{{ titre_page }}{% endblock %}
+{% block page_subtitle %}Recherche, filtrage et administration des comptes{% endblock %}
 
 {% block content %}
 
-<div class="container my-5">
-
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold">
-                <i class="bi bi-people-fill text-primary me-2"></i>
-                {{ titre_page }}
-            </h2>
-            <p class="text-muted mb-0">
-                {% if request.user.is_superuser %}
-                    Créez, consultez, modifiez les rôles et désactivez les comptes.
-                {% else %}
-                    Consultez et gérez uniquement les agents que vous avez créés.
-                {% endif %}
-            </p>
+<div class="card p-4 mb-4">
+    <form method="get" class="row g-3 align-items-end">
+        <div class="col-lg-4">
+            <label class="form-label fw-semibold">Recherche</label>
+            <input type="text" name="q" value="{{ search }}" class="form-control" placeholder="Nom, email, poste, matricule...">
         </div>
 
-        <a href="{% url 'create_user' %}" class="btn btn-primary">
-            <i class="bi bi-person-plus me-1"></i>
-            {% if request.user.is_superuser %}Créer utilisateur{% else %}Créer agent{% endif %}
-        </a>
+        <div class="col-lg-3">
+            <label class="form-label fw-semibold">Rôle</label>
+            <select name="role" class="form-select">
+                <option value="">Tous les rôles</option>
+                {% for role in available_roles %}
+                    <option value="{{ role }}" {% if selected_role == role %}selected{% endif %}>
+                        {% if role == 'ADMIN_ORGANISATION' %}Admin organisation{% endif %}
+                        {% if role == 'RESPONSABLE_DEPARTEMENT' %}Responsable département{% endif %}
+                        {% if role == 'AGENT' %}Agent{% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-lg-3">
+            <label class="form-label fw-semibold">Département</label>
+            <select name="departement" class="form-select">
+                <option value="">Tous les départements</option>
+                {% for departement in departements %}
+                    <option value="{{ departement.id }}" {% if selected_departement == departement.id|stringformat:'s' %}selected{% endif %}>
+                        {{ departement.nom }}{% if departement.organisation %} - {{ departement.organisation.nom }}{% endif %}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-lg-2 d-grid">
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-search me-1"></i>
+                Filtrer
+            </button>
+        </div>
+    </form>
+</div>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="text-muted fw-semibold">
+        {{ paginator.count }} utilisateur(s)
     </div>
+    <a href="{% url 'create_user' %}" class="btn btn-primary">
+        <i class="bi bi-person-plus me-1"></i>
+        {% if request.user.profil.role == 'RESPONSABLE_DEPARTEMENT' or request.user.profil.role == 'RESPONSABLE' %}Créer agent{% else %}Créer utilisateur{% endif %}
+    </a>
+</div>
 
-    <div class="users-card">
-
-        {% if users %}
-        <div class="table-responsive">
-            <table class="table align-middle">
-                <thead>
-                    <tr>
-                        <th>Utilisateur</th>
-                        <th>Email</th>
-                        <th>Rôle</th>
-                        <th>Statut</th>
-                        <th>Date création</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {% for u in users %}
-                    <tr>
-                        <td>
-                            <div class="user-cell">
-                                <div class="avatar">{{ u.username|first|upper }}</div>
-                                <div>
-                                    <strong>{{ u.username }}</strong>
-                                    <small>{{ u.first_name }} {{ u.last_name }}</small>
-                                </div>
+<div class="card p-4">
+    {% if users %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr>
+                    <th>Utilisateur</th>
+                    <th>Rôle</th>
+                    <th>Organisation</th>
+                    <th>Département</th>
+                    <th>Poste</th>
+                    <th>Statut</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in users %}
+                <tr>
+                    <td>
+                        <div class="user-cell">
+                            <div class="avatar">{{ u.username|first|upper }}</div>
+                            <div>
+                                <strong>{{ u.first_name }} {{ u.last_name }}</strong>
+                                <small>{{ u.email|default:u.username }}</small>
                             </div>
-                        </td>
-
-                        <td>{{ u.email|default:"-" }}</td>
-
-                        <td>
-                            {% if request.user.is_superuser %}
-                                <form method="POST" action="{% url 'change_user_role' u.id %}">
-                                    {% csrf_token %}
-                                    <select name="role" class="form-select form-select-sm" onchange="this.form.submit()">
-                                        <option value="AGENT" {% if u.profil.role == 'AGENT' %}selected{% endif %}>Agent</option>
-                                        <option value="RESPONSABLE" {% if u.profil.role == 'RESPONSABLE' %}selected{% endif %}>Responsable</option>
-                                    </select>
-                                </form>
-                            {% else %}
-                                <span class="role-badge">{{ u.profil.get_role_display }}</span>
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            {% if u.is_active %}
-                                <span class="status active">Actif</span>
-                            {% else %}
-                                <span class="status inactive">Désactivé</span>
-                            {% endif %}
-                        </td>
-
-                        <td>{{ u.date_joined|date:"d/m/Y" }}</td>
-
-                        <td class="text-end">
-                            {% if u != request.user %}
-                                <a href="{% url 'toggle_user_status' u.id %}" class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
-                                    {% if u.is_active %}Désactiver{% else %}Activer{% endif %}
-                                </a>
-                            {% else %}
-                                <span class="text-muted small">Compte actuel</span>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-
-            </table>
-        </div>
-        {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-people text-muted" style="font-size:70px;"></i>
-                <h5 class="fw-bold mt-3">Aucun utilisateur</h5>
-            </div>
-        {% endif %}
-
+                        </div>
+                    </td>
+                    <td>
+                        {% if u.profil %}<span class="role-badge">{{ u.profil.get_role_display }}</span>{% else %}<span class="text-muted">-</span>{% endif %}
+                    </td>
+                    <td>{% if u.profil.organisation %}{{ u.profil.organisation.nom }}{% else %}<span class="text-muted">-</span>{% endif %}</td>
+                    <td>{% if u.profil.departement %}{{ u.profil.departement.nom }}{% else %}<span class="text-muted">-</span>{% endif %}</td>
+                    <td>{% if u.profil.poste %}{{ u.profil.poste }}{% else %}<span class="text-muted">-</span>{% endif %}</td>
+                    <td>
+                        {% if u.is_active %}<span class="status active">Actif</span>{% else %}<span class="status inactive">Désactivé</span>{% endif %}
+                    </td>
+                    <td class="text-end">
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'user_detail' u.id %}" class="btn btn-outline-primary">Voir</a>
+                            <a href="{% url 'edit_user' u.id %}" class="btn btn-outline-secondary">Modifier</a>
+                            <a href="{% url 'toggle_user_status' u.id %}" class="btn {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                                {% if u.is_active %}Désactiver{% else %}Activer{% endif %}
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination justify-content-end mb-0">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?q={{ search }}&role={{ selected_role }}&departement={{ selected_departement }}&page={{ page_obj.previous_page_number }}">Précédent</a></li>
+            {% endif %}
+            <li class="page-item active"><span class="page-link">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?q={{ search }}&role={{ selected_role }}&departement={{ selected_departement }}&page={{ page_obj.next_page_number }}">Suivant</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+    {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-people text-muted" style="font-size:70px;"></i>
+            <h5 class="fw-bold mt-3">Aucun utilisateur</h5>
+        </div>
+    {% endif %}
 </div>
 
 <style>
-.users-card {
-    background: white;
-    border: 1px solid #E4EBF5;
-    border-radius: 22px;
-    padding: 28px;
-    box-shadow: 0 12px 35px rgba(9,30,66,.06);
-}
-
-.user-cell {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.avatar {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    background: #0057D9;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-}
-
-.user-cell small {
-    display: block;
-    color: #64748B;
-}
-
-.role-badge,
-.status {
-    padding: 7px 12px;
-    border-radius: 999px;
-    font-size: .82rem;
-    font-weight: 700;
-}
-
-.role-badge {
-    background: #EAF2FF;
-    color: #0057D9;
-}
-
-.status.active {
-    background: #DCFCE7;
-    color: #15803D;
-}
-
-.status.inactive {
-    background: #FEE2E2;
-    color: #B91C1C;
-}
+.user-cell { display: flex; align-items: center; gap: 12px; min-width: 220px; }
+.avatar { width: 42px; height: 42px; border-radius: 50%; background: #0057D9; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
+.user-cell small { display: block; color: #64748B; }
+.role-badge, .status { padding: 7px 12px; border-radius: 999px; font-size: .82rem; font-weight: 700; white-space: nowrap; }
+.role-badge { background: #EAF2FF; color: #0057D9; }
+.status.active { background: #DCFCE7; color: #15803D; }
+.status.inactive { background: #FEE2E2; color: #B91C1C; }
 </style>
 
 {% endblock %}

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Organisations{% endblock %}
+{% block page_title %}Organisations{% endblock %}
+{% block page_subtitle %}Gestion des organisations de la plateforme{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">Nouvelle organisation</h5>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-3">
+                    <label class="form-label">Nom de l'organisation</label>
+                    <input type="text" name="nom" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" rows="3"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Adresse</label>
+                    <input type="text" name="adresse" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Téléphone</label>
+                    <input type="text" name="telephone" class="form-control">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Email</label>
+                    <input type="email" name="email" class="form-control">
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    Créer l'organisation
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">Liste des organisations</h5>
+
+            <div class="table-responsive">
+                <table class="table align-middle">
+                    <thead>
+                        <tr>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Date création</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for organisation in organisations %}
+                            <tr>
+                                <td class="fw-semibold">{{ organisation.nom }}</td>
+                                <td>{{ organisation.email|default:"-" }}</td>
+                                <td>{{ organisation.telephone|default:"-" }}</td>
+                                <td>{{ organisation.date_creation|date:"d/m/Y" }}</td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">
+                                    Aucune organisation enregistrée.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Détail utilisateur{% endblock %}
+{% block page_title %}Détail utilisateur{% endblock %}
+{% block page_subtitle %}Informations complètes du compte{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end gap-2 mb-4">
+    <a href="{% url 'user_management' %}" class="btn btn-outline-secondary">Retour</a>
+    <a href="{% url 'edit_user' user_item.id %}" class="btn btn-primary">Modifier</a>
+</div>
+
+<div class="card p-4">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <div class="avatar-lg">{{ user_item.username|first|upper }}</div>
+        <div>
+            <h4 class="fw-bold mb-1">{{ user_item.first_name }} {{ user_item.last_name }}</h4>
+            <p class="text-muted mb-0">{{ user_item.email }}</p>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4"><strong>Rôle</strong><div>{{ user_item.profil.get_role_display }}</div></div>
+        <div class="col-md-4"><strong>Organisation</strong><div>{{ user_item.profil.organisation|default:'-' }}</div></div>
+        <div class="col-md-4"><strong>Département</strong><div>{{ user_item.profil.departement|default:'-' }}</div></div>
+        <div class="col-md-4"><strong>Poste</strong><div>{{ user_item.profil.poste|default:'-' }}</div></div>
+        <div class="col-md-4"><strong>Matricule</strong><div>{{ user_item.profil.matricule|default:'-' }}</div></div>
+        <div class="col-md-4"><strong>Téléphone</strong><div>{{ user_item.profil.telephone|default:'-' }}</div></div>
+        <div class="col-md-4"><strong>Date de naissance</strong><div>{% if user_item.profil.date_naissance %}{{ user_item.profil.date_naissance|date:'d/m/Y' }}{% else %}-{% endif %}</div></div>
+        <div class="col-md-4"><strong>Statut</strong><div>{% if user_item.is_active %}Actif{% else %}Désactivé{% endif %}</div></div>
+        <div class="col-md-4"><strong>Créé par</strong><div>{{ user_item.profil.cree_par|default:'-' }}</div></div>
+        <div class="col-md-4"><strong>Date création</strong><div>{{ user_item.date_joined|date:'d/m/Y H:i' }}</div></div>
+        <div class="col-md-4"><strong>Dernière connexion</strong><div>{% if user_item.last_login %}{{ user_item.last_login|date:'d/m/Y H:i' }}{% else %}-{% endif %}</div></div>
+        <div class="col-12"><strong>Adresse</strong><div>{{ user_item.profil.adresse|default:'-' }}</div></div>
+    </div>
+</div>
+
+<style>
+.avatar-lg { width: 64px; height: 64px; border-radius: 18px; background: #0057D9; color: white; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.4rem; }
+</style>
+{% endblock %}

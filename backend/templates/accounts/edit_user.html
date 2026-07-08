@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier utilisateur{% endblock %}
+{% block page_title %}Modifier utilisateur{% endblock %}
+{% block page_subtitle %}Mise à jour des informations du compte{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-end mb-4">
+    <a href="{% url 'user_detail' user_item.id %}" class="btn btn-outline-secondary">Retour</a>
+</div>
+
+<div class="card p-4">
+    <form method="post">
+        {% csrf_token %}
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Prénom</label>
+                <input type="text" name="first_name" value="{{ user_item.first_name }}" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Nom</label>
+                <input type="text" name="last_name" value="{{ user_item.last_name }}" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Email</label>
+                <input type="email" name="email" value="{{ user_item.email }}" class="form-control" required>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Téléphone</label>
+                <input type="text" name="telephone" value="{{ user_item.profil.telephone }}" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Poste</label>
+                <input type="text" name="poste" value="{{ user_item.profil.poste }}" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Matricule</label>
+                <input type="text" name="matricule" value="{{ user_item.profil.matricule }}" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Date de naissance</label>
+                <input type="date" name="date_naissance" value="{% if user_item.profil.date_naissance %}{{ user_item.profil.date_naissance|date:'Y-m-d' }}{% endif %}" class="form-control">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Rôle</label>
+                <select id="roleSelect" name="role" class="form-select" required>
+                    {% for role in roles %}
+                        <option value="{{ role }}" {% if user_item.profil.role == role %}selected{% endif %}>
+                            {% if role == 'ADMIN_ORGANISATION' %}Admin organisation{% endif %}
+                            {% if role == 'RESPONSABLE_DEPARTEMENT' %}Responsable département{% endif %}
+                            {% if role == 'AGENT' %}Agent{% endif %}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label fw-semibold">Organisation</label>
+                {% if forced_organisation %}
+                    <input type="hidden" name="organisation" value="{{ forced_organisation.id }}">
+                    <input type="text" value="{{ forced_organisation.nom }}" class="form-control" disabled>
+                {% else %}
+                    <select name="organisation" class="form-select" required>
+                        <option value="">Sélectionner</option>
+                        {% for organisation in organisations %}
+                            <option value="{{ organisation.id }}" {% if user_item.profil.organisation_id == organisation.id %}selected{% endif %}>{{ organisation.nom }}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </div>
+            <div class="col-md-6" id="departmentField">
+                <label class="form-label fw-semibold">Département</label>
+                {% if forced_departement %}
+                    <input type="hidden" name="departement" value="{{ forced_departement.id }}">
+                    <input type="text" value="{{ forced_departement.nom }}" class="form-control" disabled>
+                {% else %}
+                    <select id="departmentSelect" name="departement" class="form-select">
+                        <option value="">Sélectionner</option>
+                        {% for departement in departements %}
+                            <option value="{{ departement.id }}" {% if user_item.profil.departement_id == departement.id %}selected{% endif %}>{{ departement.nom }}{% if departement.organisation %} - {{ departement.organisation.nom }}{% endif %}</option>
+                        {% endfor %}
+                    </select>
+                {% endif %}
+            </div>
+            <div class="col-12">
+                <label class="form-label fw-semibold">Adresse</label>
+                <input type="text" name="adresse" value="{{ user_item.profil.adresse }}" class="form-control">
+            </div>
+            <div class="col-12">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" name="is_active" id="isActive" {% if user_item.is_active %}checked{% endif %}>
+                    <label class="form-check-label fw-semibold" for="isActive">Compte actif</label>
+                </div>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary mt-4">Enregistrer</button>
+    </form>
+</div>
+
+<script>
+const roleSelect = document.getElementById('roleSelect');
+const departmentField = document.getElementById('departmentField');
+const departmentSelect = document.getElementById('departmentSelect');
+function syncDepartmentRequirement() {
+    if (!roleSelect || !departmentField) return;
+    const needsDepartment = roleSelect.value === 'RESPONSABLE_DEPARTEMENT' || roleSelect.value === 'AGENT';
+    departmentField.style.display = needsDepartment ? 'block' : 'none';
+    if (departmentSelect) departmentSelect.required = needsDepartment;
+}
+if (roleSelect) { roleSelect.addEventListener('change', syncDepartmentRequirement); syncDepartmentRequirement(); }
+</script>
+{% endblock %}
