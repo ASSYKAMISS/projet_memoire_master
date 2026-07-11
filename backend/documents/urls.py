@@ -1,9 +1,11 @@
-from django.urls import path
+﻿from django.urls import path
 from . import views
 
 urlpatterns = [
     path('dashboard/', views.dashboard, name='dashboard'),
     path('documents/', views.document_list, name='document_list'),
+    path('documents/envoyes/', views.documents_envoyes, name='documents_sent'),
+    path('documents/signes/', views.documents_signes, name='documents_signed'),
     path('upload/', views.upload_document, name='upload_document'),
     path('<int:document_id>/', views.document_detail, name='document_detail'),
     path('verify/', views.verify_document, name='verify_document'),
@@ -12,3 +14,4 @@ urlpatterns = [
     path('to-sign/',views.documents_to_sign,name='documents_to_sign'),
     
 ]
+

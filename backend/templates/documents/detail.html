@@ -1,132 +1,134 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 
-{% block title %}DÃ©tail du document - SignTrust AI{% endblock %}
+{% block title %}Détail du document - ChainSign AI{% endblock %}
+{% block page_title %}Détail du document{% endblock %}
+{% block page_subtitle %}Suivi du circuit de signature et intégrité du document{% endblock %}
 
 {% block content %}
 
-<div class="container mt-5">
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card p-4 mb-4">
+            <div class="d-flex align-items-center gap-3 mb-4">
+                <div class="pdf-avatar">PDF</div>
+                <div>
+                    <h4 class="fw-bold mb-1">{{ document.titre }}</h4>
+                    <p class="text-muted mb-0">Déposé le {{ document.date_upload|date:"d/m/Y H:i" }}</p>
+                </div>
+            </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="fw-bold">DÃ©tail du document</h2>
-            <p class="text-muted">Informations techniques et Ã©tat de sÃ©curitÃ© du document.</p>
+            <div class="mb-3">
+                <strong>Statut :</strong>
+                {% if document.statut == 'SIGNE' %}
+                    <span class="badge bg-success">Signé</span>
+                {% elif document.statut == 'EN_ATTENTE_SIGNATURE' %}
+                    <span class="badge bg-warning text-dark">En circuit de signature</span>
+                {% elif document.statut == 'INVALIDE' %}
+                    <span class="badge bg-danger">Invalide</span>
+                {% else %}
+                    <span class="badge bg-secondary">{{ document.get_statut_display }}</span>
+                {% endif %}
+            </div>
+
+            {% if next_signature %}
+            <div class="alert alert-info rounded-4">
+                Document actuellement en attente de :
+                <strong>{{ next_signature.utilisateur.first_name|default:next_signature.utilisateur.username }} {{ next_signature.utilisateur.last_name }}</strong>
+                <span class="text-muted">(étape {{ next_signature.ordre }})</span>
+            </div>
+            {% elif document.statut == 'SIGNE' %}
+            <div class="alert alert-success rounded-4">
+                Toutes les signatures du circuit sont terminées.
+            </div>
+            {% endif %}
+
+            <h6 class="fw-bold mt-4">Fichiers</h6>
+            <div class="d-flex flex-wrap gap-2 mb-4">
+                <a href="{{ document.fichier_original.url }}" target="_blank" class="btn btn-outline-primary">
+                    Ouvrir le PDF original
+                </a>
+                {% if document.fichier_signe %}
+                    <a href="{{ document.fichier_signe.url }}" target="_blank" class="btn btn-primary">
+                        Ouvrir le PDF signé
+                    </a>
+                {% endif %}
+            </div>
+
+            <h6 class="fw-bold">Empreinte SHA-256 originale</h6>
+            <div class="hash-box mb-3">{{ document.hash_original }}</div>
+
+            {% if document.hash_signe %}
+            <h6 class="fw-bold">Empreinte SHA-256 du PDF signé</h6>
+            <div class="hash-box">{{ document.hash_signe }}</div>
+            {% endif %}
         </div>
-
-        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
-            Retour au tableau de bord
-        </a>
     </div>
 
-    <div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card p-4 mb-4">
+            <h5 class="fw-bold mb-3">Actions</h5>
 
-        <div class="col-md-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white">
-                    <h5 class="fw-bold mb-0">
-                        <i class="bi bi-file-earmark-pdf text-danger"></i>
-                        {{ document.titre }}
-                    </h5>
-                </div>
+            {% if can_sign_now and document.statut == 'EN_ATTENTE_SIGNATURE' %}
+                <a href="{% url 'sign_manual' document.id %}" class="btn btn-primary w-100 mb-2">
+                    <i class="bi bi-pen me-1"></i>
+                    Signer maintenant
+                </a>
+            {% elif current_signature and current_signature.statut == 'EN_ATTENTE' %}
+                <button class="btn btn-outline-secondary w-100 mb-2" disabled>
+                    En attente de votre tour
+                </button>
+            {% endif %}
 
-                <div class="card-body">
+            <a href="{% url 'verify_document' %}" class="btn btn-outline-success w-100 mb-2">
+                <i class="bi bi-shield-check me-1"></i>
+                Vérifier
+            </a>
 
-                    <p>
-                        <strong>Statut :</strong>
-                        {% if document.statut == 'SIGNE' %}
-                            <span class="badge bg-success">SignÃ©</span>
-                        {% elif document.statut == 'INVALIDE' %}
-                            <span class="badge bg-danger">Invalide</span>
-                        {% elif document.statut == 'VERIFIE' %}
-                            <span class="badge bg-info">VÃ©rifiÃ©</span>
-                        {% else %}
-                            <span class="badge bg-secondary">Brouillon</span>
-                        {% endif %}
-                    </p>
-
-                    <p>
-                        <strong>Date dâ€™ajout :</strong>
-                        {{ document.date_upload|date:"d/m/Y H:i" }}
-                    </p>
-
-                    <p>
-                        <strong>Fichier original :</strong>
-                        <a href="{{ document.fichier_original.url }}" target="_blank">
-                            Ouvrir le PDF
-                        </a>
-                    </p>
-
-                    {% if document.fichier_signe %}
-                    <p>
-                        <strong>Fichier signÃ© :</strong>
-                        <a href="{{ document.fichier_signe.url }}" target="_blank">
-                            Ouvrir le PDF signÃ©
-                        </a>
-                    </p>
-                    {% endif %}
-
-                    <hr>
-
-                    <h6 class="fw-bold">Empreinte SHA-256 originale</h6>
-                    <div class="bg-light p-3 rounded">
-                        <code style="word-break: break-all;">
-                            {{ document.hash_original }}
-                        </code>
-                    </div>
-
-                    {% if document.hash_signe %}
-                    <h6 class="fw-bold mt-4">Empreinte SHA-256 du PDF signÃ©</h6>
-                    <div class="bg-light p-3 rounded">
-                        <code style="word-break: break-all;">
-                            {{ document.hash_signe }}
-                        </code>
-                    </div>
-                    {% endif %}
-
-                </div>
-            </div>
+            {% if document.audit_blockchain %}
+                <a href="{% url 'blockchain_audit' %}" class="btn btn-outline-dark w-100">
+                    <i class="bi bi-box me-1"></i>
+                    Audit blockchain
+                </a>
+            {% endif %}
         </div>
 
-        <div class="col-md-4">
+        <div class="card p-4">
+            <h5 class="fw-bold mb-3">Circuit de signature</h5>
 
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-body">
-                    <h5 class="fw-bold">Actions</h5>
-
-                    <a href="#" class="btn btn-primary w-100 mb-2">
-                        <i class="bi bi-pen"></i> Signer le document
-                    </a>
-
-                    <a href="#" class="btn btn-success w-100 mb-2">
-                        <i class="bi bi-shield-check"></i> VÃ©rifier le document
-                    </a>
-
-                    <a href="#" class="btn btn-outline-dark w-100 mb-2">
-                        <i class="bi bi-link-45deg"></i> Voir audit blockchain
-                    </a>
-
-                    <a href="#" class="btn btn-outline-danger w-100">
-                        <i class="bi bi-cpu"></i> Score IA
-                    </a>
+            {% for signature in signatures_attendues %}
+                <div class="signature-step {% if next_signature and signature.id == next_signature.id %}current{% endif %}">
+                    <div class="step-number">{{ signature.ordre }}</div>
+                    <div>
+                        <strong>{{ signature.utilisateur.first_name|default:signature.utilisateur.username }} {{ signature.utilisateur.last_name }}</strong>
+                        <small>
+                            {% if signature.statut == 'SIGNE' %}
+                                Signé le {{ signature.date_signature|date:"d/m/Y H:i" }}
+                            {% elif next_signature and signature.id == next_signature.id %}
+                                En attente actuellement
+                            {% else %}
+                                En attente
+                            {% endif %}
+                        </small>
+                    </div>
+                    <span class="status-dot {{ signature.statut|lower }}"></span>
                 </div>
-            </div>
-
-            <div class="card border-0 shadow-sm">
-                <div class="card-body">
-                    <h6 class="fw-bold">RÃ©sumÃ© sÃ©curitÃ©</h6>
-                    <p class="text-muted small mb-1">Hash SHA-256 gÃ©nÃ©rÃ©</p>
-                    <span class="badge bg-success">Disponible</span>
-
-                    <p class="text-muted small mt-3 mb-1">Signature numÃ©rique</p>
-                    <span class="badge bg-secondary">Non encore signÃ©e</span>
-
-                    <p class="text-muted small mt-3 mb-1">Blockchain</p>
-                    <span class="badge bg-secondary">Non enregistrÃ©e</span>
-                </div>
-            </div>
-
+            {% empty %}
+                <p class="text-muted mb-0">Aucun signataire défini.</p>
+            {% endfor %}
         </div>
-
     </div>
 </div>
+
+<style>
+.pdf-avatar { width: 50px; height: 50px; border-radius: 14px; background: #DC2626; color: white; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+.hash-box { background: #F8FBFF; border: 1px solid #E4EBF5; border-radius: 14px; padding: 14px; font-family: monospace; word-break: break-all; color: #334155; }
+.signature-step { display: grid; grid-template-columns: 38px 1fr 16px; align-items: center; gap: 12px; padding: 12px; border: 1px solid #E4EBF5; border-radius: 14px; margin-bottom: 10px; }
+.signature-step.current { background: #EEF5FF; border-color: #0057D9; }
+.step-number { width: 34px; height: 34px; border-radius: 10px; background: #EAF2FF; color: #0057D9; display: flex; align-items: center; justify-content: center; font-weight: 900; }
+.signature-step small { display: block; color: #64748B; }
+.status-dot { width: 12px; height: 12px; border-radius: 999px; background: #F59E0B; }
+.status-dot.signe { background: #16A34A; }
+.status-dot.invalide { background: #DC2626; }
+</style>
 
 {% endblock %}

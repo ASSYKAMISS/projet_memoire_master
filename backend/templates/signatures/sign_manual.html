@@ -28,7 +28,7 @@
             <div class="step-line"></div>
               <div class="step">
                 <div class="step-number">5</div>
-                <span>Document SignÃ©</span>
+                <span>Document SignÃƒÂ©</span>
             </div>
 
           
@@ -42,6 +42,7 @@
         <input type="hidden" name="signature_data" id="signatureData">
         <input type="hidden" name="position_x" id="positionX" value="80">
         <input type="hidden" name="position_y" id="positionY" value="120">
+        <input type="hidden" name="page_numero" id="pageNumero" value="1">
         <input type="hidden" name="largeur" id="signatureWidth" value="180">
         <input type="hidden" name="hauteur" id="signatureHeight" value="80">
         <input type="hidden" name="pdf_scale" id="pdfScale" value="1.25">
@@ -67,7 +68,7 @@
                         </div>
 
                         <div>
-                            <span>Date dÃ©pÃ´t</span>
+                            <span>Date dÃ©pot</span>
                             <strong>{{ document.date_upload|date:"d/m/Y" }}</strong>
                         </div>
 
@@ -143,7 +144,7 @@
                         <i class="bi bi-info-circle"></i>
                         <strong>Placement de la signature</strong>
                         <p>
-                            AprÃ¨s avoir dessinÃ© ou importÃ© la signature, cliquez sur le PDF pour la placer.
+                            AprÃ¨s avoir dessiner ou importer la signature, cliquez sur le PDF pour la placer.
                             Vous pouvez ensuite la dÃ©placer avec la souris.
                         </p>
                     </div>
@@ -612,7 +613,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
 <script>
-const pdfUrl = "{{ document.fichier_original.url }}";
+const pdfUrl = "{% if document.fichier_signe %}{{ document.fichier_signe.url }}{% else %}{{ document.fichier_original.url }}{% endif %}";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc =
     "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -632,6 +633,7 @@ const pdfWrapper = document.getElementById('pdfWrapper');
 
 const positionX = document.getElementById('positionX');
 const positionY = document.getElementById('positionY');
+const pageNumero = document.getElementById('pageNumero');
 const signatureWidth = document.getElementById('signatureWidth');
 const signatureHeight = document.getElementById('signatureHeight');
 
@@ -811,6 +813,7 @@ pdfWrapper.addEventListener('click', function(e) {
 
     positionX.value = Math.round(x);
     positionY.value = Math.round(y);
+    pageNumero.value = pageNum;
     displayX.textContent = Math.round(x);
     displayY.textContent = Math.round(y);
 });
@@ -846,6 +849,7 @@ document.addEventListener('mousemove', function(e) {
 
     positionX.value = Math.round(x);
     positionY.value = Math.round(y);
+    pageNumero.value = pageNum;
     displayX.textContent = Math.round(x);
     displayY.textContent = Math.round(y);
 });
@@ -881,4 +885,7 @@ document.getElementById('signatureForm').addEventListener('submit', function(e) 
 </script>
 
 {% endblock %}
+
+
+
 

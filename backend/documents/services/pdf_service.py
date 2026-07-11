@@ -7,15 +7,15 @@ from django.core.files import File
 
 def generer_pdf_signe(document, signature=None):
     if not document.fichier_original:
-        raise ValueError("Aucun fichier original trouvé.")
+        raise ValueError("Aucun fichier original trouvÃ©.")
 
     signatures = document.signatures.filter(
         statut='SIGNE',
         image_signature__isnull=False,
-    ).exclude(image_signature='').order_by('date_signature')
+    ).exclude(image_signature='').order_by('ordre', 'date_signature')
 
     if not signatures.exists():
-        raise ValueError("Aucune signature validée trouvée.")
+        raise ValueError("Aucune signature validÃ©e trouvÃ©e.")
 
     original_path = document.fichier_original.path
 
@@ -26,10 +26,16 @@ def generer_pdf_signe(document, signature=None):
     output_path = os.path.join(output_dir, output_filename)
 
     pdf = fitz.open(original_path)
-    page = pdf[0]
 
     for sig in signatures:
         signature_path = sig.image_signature.path
+        page_index = max(int(getattr(sig, 'page_numero', 1)) - 1, 0)
+
+        if page_index >= len(pdf):
+            page_index = 0
+
+        page = pdf[page_index]
+
 
         x = float(sig.position_x)
         y = float(sig.position_y)
@@ -62,3 +68,5 @@ def generer_pdf_signe(document, signature=None):
     document.save()
 
     return document
+
+

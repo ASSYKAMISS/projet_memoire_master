@@ -15,6 +15,11 @@ from documents.services.pdf_service import generer_pdf_signe
 from .models import Signature
 
 
+def prochaine_signature(document):
+    return document.signatures.filter(
+        statut='EN_ATTENTE'
+    ).order_by('ordre').first()
+
 @login_required
 def sign_manual(request, document_id):
     document = get_object_or_404(Document, id=document_id)
@@ -26,8 +31,13 @@ def sign_manual(request, document_id):
     )
 
     if signature.statut == 'SIGNE':
-        messages.info(request, "Vous avez déjà signé ce document.")
+        messages.info(request, "Vous avez dÃƒÂ©jÃƒÂ  signé ce document.")
         return redirect('document_detail', document_id=document.id)
+
+    next_signature = prochaine_signature(document)
+    if not next_signature or next_signature.id != signature.id:
+        messages.error(request, "Ce n'est pas encore votre tour de signer ce document.")
+        return redirect('documents_to_sign')
 
     if document.statut != 'EN_ATTENTE_SIGNATURE':
         messages.error(request, "Ce document n'est pas en attente de signature.")
@@ -40,11 +50,13 @@ def sign_manual(request, document_id):
         pdf_scale = float(request.POST.get('pdf_scale', 1) or 1)
         position_x = float(request.POST.get('position_x', 0) or 0) / pdf_scale
         position_y = float(request.POST.get('position_y', 0) or 0) / pdf_scale
+        page_numero = int(request.POST.get('page_numero', 1) or 1)
         largeur = float(request.POST.get('largeur', 180) or 180) / pdf_scale
         hauteur = float(request.POST.get('hauteur', 80) or 80) / pdf_scale
 
         signature.position_x = position_x
         signature.position_y = position_y
+        signature.page_numero = max(page_numero, 1)
         signature.largeur = largeur
         signature.hauteur = hauteur
 
@@ -112,7 +124,7 @@ def sign_manual(request, document_id):
             else:
                 messages.warning(
                     request,
-                    "Document signé par tous les agents requis, mais l'enregistrement blockchain a échoué."
+                    "Document signé par tous les agents requis, mais l'enregistrement blockchain à échouer."
                 )
         else:
             document.statut = 'EN_ATTENTE_SIGNATURE'
@@ -129,4 +141,6 @@ def sign_manual(request, document_id):
         'signature': signature,
         'active_page': 'to_sign',
     })
+
+
 

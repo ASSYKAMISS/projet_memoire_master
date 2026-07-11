@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
@@ -135,6 +135,78 @@
         }
 
         .app-layout.collapsed .menu-section {
+            display: none;
+        }
+
+        .menu-group {
+            margin-bottom: 8px;
+        }
+
+        .menu-toggle {
+            width: 100%;
+            border: 0;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            color: #475569;
+            border-radius: 15px;
+            font-weight: 700;
+            transition: .25s;
+            text-align: left;
+        }
+
+        .menu-toggle:hover,
+        .menu-toggle.active {
+            background: #EEF5FF;
+            color: var(--primary);
+        }
+
+        .menu-toggle.active {
+            background: #EEF5FF;
+            color: var(--primary);
+            border: 1px solid #CFE0FF;
+            box-shadow: none;
+        }
+
+        .menu-toggle i:first-child {
+            font-size: 21px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .menu-toggle .chevron {
+            margin-left: auto;
+            font-size: 14px;
+            transition: transform .2s ease;
+        }
+
+        .menu-toggle[aria-expanded="true"] .chevron {
+            transform: rotate(180deg);
+        }
+
+        .submenu {
+            padding: 0 0 6px 38px;
+        }
+
+        .submenu a {
+            padding: 10px 14px;
+            margin-bottom: 4px;
+            border-radius: 12px;
+            font-size: .92rem;
+            gap: 10px;
+        }
+
+        .submenu a i {
+            font-size: 17px;
+            min-width: 20px;
+        }
+
+        .app-layout.collapsed .menu-toggle span,
+        .app-layout.collapsed .menu-toggle .chevron,
+        .app-layout.collapsed .submenu {
             display: none;
         }
 
@@ -345,80 +417,163 @@
     </a>
 
     {% if user.is_superuser or role == 'ADMIN_ORGANISATION' %}
-    <div class="menu-section"><span>Organisation</span></div>
+    <div class="menu-section"><span>Administration</span></div>
+
+    <div class="menu-group">
+        <button class="menu-toggle {% if active_page == 'organisations' or active_page == 'departements' or active_page == 'users' or active_page == 'create_user' %}active{% endif %}"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#adminMenu"
+                aria-expanded="{% if active_page == 'organisations' or active_page == 'departements' or active_page == 'users' or active_page == 'create_user' %}true{% else %}false{% endif %}"
+                aria-controls="adminMenu">
+            <i class="bi bi-building-gear"></i>
+            <span>Gestion admin</span>
+            <i class="bi bi-chevron-down chevron"></i>
+        </button>
+
+        <div class="collapse {% if active_page == 'organisations' or active_page == 'departements' or active_page == 'users' or active_page == 'create_user' %}show{% endif %}" id="adminMenu">
+            <div class="submenu">
+                {% if user.is_superuser %}
+                <a href="{% url 'organisations' %}"
+                   class="{% if active_page == 'organisations' %}active{% endif %}">
+                    <i class="bi bi-diagram-3"></i>
+                    <span>Organisations</span>
+                </a>
+                {% endif %}
+
+                <a href="{% url 'departments' %}"
+                   class="{% if active_page == 'departements' %}active{% endif %}">
+                    <i class="bi bi-building"></i>
+                    <span>Départements</span>
+                </a>
+
+                <a href="{% url 'user_management' %}"
+                   class="{% if active_page == 'users' %}active{% endif %}">
+                    <i class="bi bi-people"></i>
+                    <span>Liste des utilisateurs</span>
+                </a>
+
+                <a href="{% url 'create_user' %}"
+                   class="{% if active_page == 'create_user' %}active{% endif %}">
+                    <i class="bi bi-person-plus"></i>
+                    <span>Créer un utilisateur</span>
+                </a>
+            </div>
+        </div>
+    </div>
     {% endif %}
 
-    {% if user.is_superuser %}
-    <a href="{% url 'organisations' %}"
-       class="{% if active_page == 'organisations' %}active{% endif %}">
-        <i class="bi bi-diagram-3"></i>
-        <span>Organisations</span>
-    </a>
-    {% endif %}
+    {% if role == 'RESPONSABLE_DEPARTEMENT' or role == 'RESPONSABLE' %}
+    <div class="menu-section"><span>Équipe</span></div>
 
-    {% if user.is_superuser or role == 'ADMIN_ORGANISATION' or role == 'RESPONSABLE_DEPARTEMENT' or role == 'RESPONSABLE' %}
-    <a href="{% url 'departments' %}"
-       class="{% if active_page == 'departements' %}active{% endif %}">
-        <i class="bi bi-building"></i>
-        <span>DÃƒÂ©partements</span>
-    </a>
+    <div class="menu-group">
+        <button class="menu-toggle {% if active_page == 'users' or active_page == 'create_user' %}active{% endif %}"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#agentsMenu"
+                aria-expanded="{% if active_page == 'users' or active_page == 'create_user' %}true{% else %}false{% endif %}"
+                aria-controls="agentsMenu">
+            <i class="bi bi-person-lines-fill"></i>
+            <span>Gestion de mes agents</span>
+            <i class="bi bi-chevron-down chevron"></i>
+        </button>
 
-    <a href="{% url 'user_management' %}"
-       class="{% if active_page == 'users' %}active{% endif %}">
-        <i class="bi bi-people"></i>
-        <span>Utilisateurs</span>
-    </a>
+        <div class="collapse {% if active_page == 'users' or active_page == 'create_user' %}show{% endif %}" id="agentsMenu">
+            <div class="submenu">
+                <a href="{% url 'user_management' %}"
+                   class="{% if active_page == 'users' %}active{% endif %}">
+                    <i class="bi bi-list-ul"></i>
+                    <span>Liste des agents</span>
+                </a>
 
-    <a href="{% url 'create_user' %}"
-       class="{% if active_page == 'create_user' %}active{% endif %}">
-        <i class="bi bi-person-plus"></i>
-        <span>{% if role == 'RESPONSABLE_DEPARTEMENT' or role == 'RESPONSABLE' %}CrÃƒÂ©er agent{% else %}CrÃƒÂ©er utilisateur{% endif %}</span>
-    </a>
+                <a href="{% url 'create_user' %}"
+                   class="{% if active_page == 'create_user' %}active{% endif %}">
+                    <i class="bi bi-person-plus"></i>
+                    <span>Ajouter un agent</span>
+                </a>
+            </div>
+        </div>
+    </div>
     {% endif %}
 
     <div class="menu-section"><span>Documents</span></div>
 
-    <a href="{% url 'upload_document' %}"
-       class="{% if active_page == 'upload' %}active{% endif %}">
-        <i class="bi bi-plus-circle"></i>
-        <span>Nouveau document</span>
-    </a>
+    <div class="menu-group">
+        <button class="menu-toggle {% if active_page == 'upload' or active_page == 'documents_sent' or active_page == 'to_sign' or active_page == 'signed_documents' %}active{% endif %}"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#documentsMenu"
+                aria-expanded="{% if active_page == 'upload' or active_page == 'documents_sent' or active_page == 'to_sign' or active_page == 'signed_documents' %}true{% else %}false{% endif %}"
+                aria-controls="documentsMenu">
+            <i class="bi bi-folder2-open"></i>
+            <span>Documents</span>
+            <i class="bi bi-chevron-down chevron"></i>
+        </button>
 
-    {% if role == 'AGENT' %}
-    <a href="{% url 'documents_to_sign' %}"
-       class="{% if active_page == 'to_sign' %}active{% endif %}">
-        <i class="bi bi-pen"></i>
-        <span>Documents ÃƒÂ  signer</span>
-    </a>
-    {% endif %}
+        <div class="collapse {% if active_page == 'upload' or active_page == 'documents_sent' or active_page == 'to_sign' or active_page == 'signed_documents' %}show{% endif %}" id="documentsMenu">
+            <div class="submenu">
+                <a href="{% url 'upload_document' %}"
+                   class="{% if active_page == 'upload' %}active{% endif %}">
+                    <i class="bi bi-cloud-arrow-up"></i>
+                    <span>Nouveau document</span>
+                </a>
+                <a href="{% url 'documents_sent' %}"
+                   class="{% if active_page == 'documents_sent' %}active{% endif %}">
+                    <i class="bi bi-send"></i>
+                    <span>Documents envoyés</span>
+                </a>
 
-    <a href="{% url 'document_list' %}"
-       class="{% if active_page == 'documents' %}active{% endif %}">
-        <i class="bi bi-folder"></i>
-        <span>{% if user.is_superuser %}Documents{% else %}Mes documents{% endif %}</span>
-    </a>
+                <a href="{% url 'documents_to_sign' %}"
+                   class="{% if active_page == 'to_sign' %}active{% endif %}">
+                    <i class="bi bi-pen"></i>
+                    <span>Documents à signer</span>
+                </a>
 
-    <div class="menu-section"><span>SÃƒÂ©curitÃƒÂ©</span></div>
+                <a href="{% url 'documents_signed' %}"
+                   class="{% if active_page == 'signed_documents' %}active{% endif %}">
+                    <i class="bi bi-file-earmark-check"></i>
+                    <span>Documents signés</span>
+                </a>
+            </div>
+        </div>
+    </div>
 
-    <a href="{% url 'verify_document' %}"
-       class="{% if active_page == 'verification' %}active{% endif %}">
-        <i class="bi bi-patch-check"></i>
-        <span>VÃƒÂ©rification</span>
-    </a>
+    <div class="menu-section"><span>Sécurité</span></div>
 
-    {% if user.is_superuser or role == 'ADMIN_ORGANISATION' or role == 'RESPONSABLE_DEPARTEMENT' or role == 'RESPONSABLE' %}
-    <a href="{% url 'blockchain_audit' %}"
-       class="{% if active_page == 'blockchain' %}active{% endif %}">
-        <i class="bi bi-box"></i>
-        <span>Audit Blockchain</span>
-    </a>
-    {% endif %}
+    <div class="menu-group">
+        <button class="menu-toggle {% if active_page == 'verification' or active_page == 'blockchain' or active_page == 'history' %}active{% endif %}"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#securityMenu"
+                aria-expanded="{% if active_page == 'verification' or active_page == 'blockchain' or active_page == 'history' %}true{% else %}false{% endif %}"
+                aria-controls="securityMenu">
+            <i class="bi bi-shield-check"></i>
+            <span>Sécurité</span>
+            <i class="bi bi-chevron-down chevron"></i>
+        </button>
 
-    <a href="{% url 'operation_history' %}"
-       class="{% if active_page == 'history' %}active{% endif %}">
-        <i class="bi bi-clock-history"></i>
-        <span>Historique</span>
-    </a>
+        <div class="collapse {% if active_page == 'verification' or active_page == 'blockchain' or active_page == 'history' %}show{% endif %}" id="securityMenu">
+            <div class="submenu">
+                <a href="{% url 'verify_document' %}"
+                   class="{% if active_page == 'verification' %}active{% endif %}">
+                    <i class="bi bi-patch-check"></i>
+                    <span>Vérification</span>
+                </a>
+
+                <a href="{% url 'blockchain_audit' %}"
+                   class="{% if active_page == 'blockchain' %}active{% endif %}">
+                    <i class="bi bi-box"></i>
+                    <span>Audit Blockchain</span>
+                </a>
+
+                <a href="{% url 'operation_history' %}"
+                   class="{% if active_page == 'history' %}active{% endif %}">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Historique</span>
+                </a>
+            </div>
+        </div>
+    </div>
 
     {% endwith %}
 
@@ -427,13 +582,13 @@
         <div class="sidebar-footer">
             <div class="secure-box">
                 <i class="bi bi-shield-lock"></i>
-                <span>Espace sÃƒÆ’Ã‚Â©curisÃƒÆ’Ã‚Â©</span>
+                <span>Espace securisé</span>
             </div>
 
             {% if user.is_authenticated %}
                 <a href="{% url 'logout' %}" class="logout-link">
                     <i class="bi bi-box-arrow-left"></i>
-                    <span>DÃƒÆ’Ã‚Â©connexion</span>
+                    <span>Deconnexion</span>
                 </a>
             {% else %}
                 <a href="{% url 'login' %}" class="logout-link">
@@ -454,7 +609,7 @@
 
                 <div class="topbar-title">
                     <h4>{% block page_title %}ChainSign AI{% endblock %}</h4>
-                    <small>{% block page_subtitle %}Signature ÃƒÆ’Ã‚Â©lectronique, blockchain et IA{% endblock %}</small>
+                    <small>{% block page_subtitle %}Signature électronique, blockchain et IA{% endblock %}</small>
                 </div>
             </div>
             {% if user.is_authenticated %}
@@ -527,5 +682,13 @@
 
 </body>
 </html>
+
+
+
+
+
+
+
+
 
 
