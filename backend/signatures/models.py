@@ -10,6 +10,11 @@ class Signature(models.Model):
         ('SIGNE', 'SignÃ©'),
         ('INVALIDE', 'Invalide'),
     ]
+    SOURCE_CHOICES = [
+    ("DRAW", "Signature dessinée"),
+    ("UPLOAD", "Signature importée"),
+    ]
+
 
     document = models.ForeignKey(
         Document,
@@ -28,6 +33,12 @@ class Signature(models.Model):
         null=True,
         blank=True
     )
+    source_signature = models.CharField(
+    max_length=20,
+    choices=SOURCE_CHOICES,
+    blank=True
+)
+    
 
     position_x = models.FloatField(default=0)
     position_y = models.FloatField(default=0)

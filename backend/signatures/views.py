@@ -13,6 +13,7 @@ from documents.models import Document
 from documents.services.hash_service import calculer_hash_document_signe
 from documents.services.pdf_service import generer_pdf_signe
 from .models import Signature
+from ai_risk.services.analyse_service import analyser_signature
 
 
 def prochaine_signature(document):
@@ -31,7 +32,7 @@ def sign_manual(request, document_id):
     )
 
     if signature.statut == 'SIGNE':
-        messages.info(request, "Vous avez dÃƒÂ©jÃƒÂ  signé ce document.")
+        messages.info(request, "Vous avez déjà signé ce document.")
         return redirect('document_detail', document_id=document.id)
 
     next_signature = prochaine_signature(document)
@@ -61,6 +62,8 @@ def sign_manual(request, document_id):
         signature.hauteur = hauteur
 
         if signature_source == 'draw' and signature_data:
+            signature.source_signature = 'DRAW'
+
             format_part, imgstr = signature_data.split(';base64,')
             ext = format_part.split('/')[-1]
             file_name = f"signature_{uuid.uuid4()}.{ext}"
@@ -70,7 +73,9 @@ def sign_manual(request, document_id):
                 ContentFile(base64.b64decode(imgstr)),
                 save=False
             )
+
         elif signature_source == 'upload':
+            signature.source_signature = 'UPLOAD'
             uploaded_signature = request.FILES.get('signature_file')
 
             if uploaded_signature:
@@ -78,12 +83,16 @@ def sign_manual(request, document_id):
             elif not signature.image_signature:
                 messages.error(request, "Veuillez importer une signature.")
                 return redirect('sign_manual', document_id=document.id)
+
         else:
             messages.error(request, "Veuillez dessiner ou importer une signature.")
             return redirect('sign_manual', document_id=document.id)
 
         signature.statut = 'SIGNE'
         signature.save()
+
+        # Analyse IA ImageHash après enregistrement de l'image de signature
+        analyser_signature(signature)
 
         generer_pdf_signe(document, signature)
         hash_signe = calculer_hash_document_signe(document)
@@ -124,7 +133,7 @@ def sign_manual(request, document_id):
             else:
                 messages.warning(
                     request,
-                    "Document signé par tous les agents requis, mais l'enregistrement blockchain à échouer."
+                    "Document signé par tous les agents requis, mais l'enregistrement blockchain a échoué."
                 )
         else:
             document.statut = 'EN_ATTENTE_SIGNATURE'

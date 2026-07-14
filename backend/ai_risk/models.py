@@ -1,86 +1,55 @@
 from django.db import models
-from documents.models import Document
 from django.conf import settings
 from signatures.models import Signature
 
 
-class ScoreRisqueIA(models.Model):
-
+class AnalyseSignatureIA(models.Model):
     NIVEAU_CHOICES = [
-        ('FAIBLE', 'Faible'),
-        ('MOYEN', 'Moyen'),
-        ('ELEVE', 'Élevé'),
+        ("REFERENCE", "Référence"),
+        ("FAIBLE", "Faible"),
+        ("MOYEN", "Moyen"),
+        ("ELEVE", "Élevé"),
+        ("SUSPECT", "Suspect"),
     ]
 
-    document = models.OneToOneField(
-        Document,
-        on_delete=models.CASCADE,
-        related_name='score_risque'
-    )
-
-    score = models.FloatField(default=0)
-
-    niveau = models.CharField(
-        max_length=20,
-        choices=NIVEAU_CHOICES,
-        default='FAIBLE'
-    )
-
-    anomalie_detectee = models.BooleanField(default=False)
-
-    explication = models.TextField(blank=True)
-
-    date_calcul = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"Score IA - {self.document.titre}"
-    
-                                        
-
-    TYPE_ANOMALIE_CHOICES = [
-        ("AUCUNE", "Aucune anomalie"),
-        ("SIGNATURE_TROP_SIMPLE", "Signature trop simple"),
-        ("SIGNATURE_DIFFERENTE_HABITUDE", "Signature différente des habitudes"),
-        ("SIGNATURE_SIMILAIRE_AUTRE_AGENT", "Signature similaire à un autre agent"),
-        ("POSITION_INHABITUELLE", "Position inhabituelle"),
-        ("TAILLE_INHABITUELLE", "Taille inhabituelle"),
-        ("VALIDATION_TROP_RAPIDE", "Validation trop rapide"),
-        ("ANOMALIE_GLOBALE", "Anomalie globale"),
+    SOURCE_CHOICES = [
+        ("DRAW", "Signature dessinée"),
+        ("UPLOAD", "Signature importée"),
     ]
 
     signature = models.OneToOneField(
         Signature,
         on_delete=models.CASCADE,
-        related_name="analyse_fraude",
+        related_name="analyse_ia"
     )
 
-    agent = models.ForeignKey(
+    utilisateur = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="analyses_fraude_signature",
+        related_name="analyses_signature_ia"
     )
 
-    score_fraude = models.PositiveIntegerField(default=0)
-
-    niveau_risque = models.CharField(
+    source_signature = models.CharField(
         max_length=20,
-        choices=NIVEAU_RISQUE_CHOICES,
-        default="FAIBLE",
+        choices=SOURCE_CHOICES,
+        blank=True
     )
-
-    anomalie_detectee = models.BooleanField(default=False)
-
-    type_anomalie = models.CharField(
-        max_length=50,
-        choices=TYPE_ANOMALIE_CHOICES,
-        default="AUCUNE",
-    )
-
-    explication = models.TextField(blank=True)
 
     image_hash = models.CharField(max_length=100, blank=True)
 
-    date_analyse = models.DateTimeField(auto_now=True)
+    distance_min = models.FloatField(null=True, blank=True)
+    distance_moyenne = models.FloatField(null=True, blank=True)
+
+    niveau_risque = models.CharField(
+        max_length=20,
+        choices=NIVEAU_CHOICES,
+        default="REFERENCE"
+    )
+
+    anomalie_detectee = models.BooleanField(default=False)
+    explication = models.TextField(blank=True)
+
+    date_analyse = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Analyse IA - {self.agent} - {self.niveau_risque}"
+        return f"Analyse IA - {self.utilisateur} - {self.niveau_risque}"

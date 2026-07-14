@@ -190,7 +190,7 @@ def documents_signes(request):
 @login_required
 def upload_document(request):
     if not request.user.is_superuser and not hasattr(request.user, 'profil'):
-        messages.error(request, "Votre compte n'est pas autorisÃ© Ã  tÃ©lÃ©verser un document.")
+        messages.error(request, "Votre compte n'est pas autorisé à téléverser un document.")
         return redirect('dashboard')
 
     if request.method == 'POST':
@@ -198,7 +198,7 @@ def upload_document(request):
         fichier = request.FILES.get('fichier_original')
 
         if not titre or not fichier:
-            messages.error(request, "Veuillez renseigner le titre et sÃƒÂ©lectionner un fichier PDF.")
+            messages.error(request, "Veuillez renseigner le titre et selectionner un fichier PDF.")
             return redirect('upload_document')
 
         document = Document.objects.create(
@@ -211,7 +211,7 @@ def upload_document(request):
         document.statut = 'BROUILLON'
         document.save()
 
-        messages.success(request, "Document tÃƒÂ©lÃƒÂ©verÃƒÂ© avec succÃƒÂ¨s. Veuillez dÃƒÂ©finir le circuit de signature.")
+        messages.success(request, "Document téléverser avec succès. Veuillez définir le circuit de signature.")
         return redirect('document_access', document_id=document.id)
 
     return render(request, 'documents/upload.html', {
@@ -224,7 +224,7 @@ def document_access(request, document_id):
     document = get_object_or_404(Document, id=document_id)
 
     if not can_manage_document(request.user, document):
-        messages.error(request, "AccÃƒÂ¨s rÃƒÂ©sevÃƒÂ© au propriÃƒÂ©taire du document ou ÃƒÂ  un gestionnaire autorisÃƒÂ©.")
+        messages.error(request, "Accès réservé au propriétaire du document ou à un gestionnaire autorisé.")
         return redirect('dashboard')
 
     agents = User.objects.filter(
@@ -279,15 +279,15 @@ def document_access(request, document_id):
             try:
                 ordre = int(ordre_value)
             except ValueError:
-                messages.error(request, "L'ordre de signature doit ÃƒÂªtre un nombre entier.")
+                messages.error(request, "L'ordre de signature doit etre un nombre entier.")
                 return redirect('document_access', document_id=document.id)
 
             if ordre < 1:
-                messages.error(request, "L'ordre de signature doit commencer ÃƒÂ  1.")
+                messages.error(request, "L'ordre de signature doit commencer par  1.")
                 return redirect('document_access', document_id=document.id)
 
             if ordre in used_orders:
-                messages.error(request, "Chaque signataire doit avoir un ordre diffÃƒÂ©rent.")
+                messages.error(request, "Chaque signataire doit avoir un ordre différent.")
                 return redirect('document_access', document_id=document.id)
 
             selected_signataires.append((ordre, agent))
@@ -296,7 +296,7 @@ def document_access(request, document_id):
 
         expected_orders = set(range(1, len(selected_signataires) + 1))
         if used_orders != expected_orders:
-            messages.error(request, "L'ordre doit ÃƒÂªtre continu : 1, 2, 3, sans saut ni doublon.")
+            messages.error(request, "L'ordre doit etre continu : 1, 2, 3, sans saut ni doublon.")
             return redirect('document_access', document_id=document.id)
 
         selected_signataires.sort(key=lambda item: item[0])
@@ -323,7 +323,7 @@ def document_access(request, document_id):
 
         messages.success(
             request,
-            f"Circuit de signature crÃƒÂ©ÃƒÂ© avec succÃƒÂ¨s. {len(selected_signataires)} signature(s) attendue(s) dans l'ordre defini."
+            f"Circuit de signature créé avec succès. {len(selected_signataires)} signature(s) attendue(s) dans l'ordre defini."
         )
         return redirect('document_detail', document_id=document.id)
 

@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
 {% block title %}Détail du document - ChainSign AI{% endblock %}
 {% block page_title %}Détail du document{% endblock %}
@@ -34,11 +34,11 @@
             <div class="alert alert-info rounded-4">
                 Document actuellement en attente de :
                 <strong>{{ next_signature.utilisateur.first_name|default:next_signature.utilisateur.username }} {{ next_signature.utilisateur.last_name }}</strong>
-                <span class="text-muted">(étape {{ next_signature.ordre }})</span>
+                <span class="text-muted">(Ã©tape {{ next_signature.ordre }})</span>
             </div>
             {% elif document.statut == 'SIGNE' %}
             <div class="alert alert-success rounded-4">
-                Toutes les signatures du circuit sont terminées.
+                Toutes les signatures du circuit sont terminés.
             </div>
             {% endif %}
 
@@ -111,6 +111,28 @@
                         </small>
                     </div>
                     <span class="status-dot {{ signature.statut|lower }}"></span>
+
+                    {% if signature.analyse_ia %}
+                        <div class="ia-analysis">
+                            <strong>Analyse IA :</strong>
+                            {{ signature.analyse_ia.get_niveau_risque_display }}
+
+                            <br>
+
+                            <small>
+                                Distance moyenne :
+                                {% if signature.analyse_ia.distance_moyenne %}
+                                    {{ signature.analyse_ia.distance_moyenne|floatformat:2 }}
+                                {% else %}
+                                    Référence
+                                {% endif %}
+                            </small>
+
+                            <br>
+
+                            <small>{{ signature.analyse_ia.explication }}</small>
+                        </div>
+                    {% endif %}
                 </div>
             {% empty %}
                 <p class="text-muted mb-0">Aucun signataire défini.</p>
@@ -123,6 +145,9 @@
 .pdf-avatar { width: 50px; height: 50px; border-radius: 14px; background: #DC2626; color: white; display: flex; align-items: center; justify-content: center; font-weight: 900; }
 .hash-box { background: #F8FBFF; border: 1px solid #E4EBF5; border-radius: 14px; padding: 14px; font-family: monospace; word-break: break-all; color: #334155; }
 .signature-step { display: grid; grid-template-columns: 38px 1fr 16px; align-items: center; gap: 12px; padding: 12px; border: 1px solid #E4EBF5; border-radius: 14px; margin-bottom: 10px; }
+.ia-analysis { grid-column: 2 / 4; background: #F8FBFF; border: 1px solid #E4EBF5; border-radius: 12px; padding: 10px 12px; color: #334155; }
+.ia-analysis strong { color: #0057D9; }
+.ia-analysis small { color: #64748B; }
 .signature-step.current { background: #EEF5FF; border-color: #0057D9; }
 .step-number { width: 34px; height: 34px; border-radius: 10px; background: #EAF2FF; color: #0057D9; display: flex; align-items: center; justify-content: center; font-weight: 900; }
 .signature-step small { display: block; color: #64748B; }
