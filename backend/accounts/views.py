@@ -1,4 +1,4 @@
-from django.contrib import messages
+﻿from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import PasswordChangeForm
@@ -17,6 +17,44 @@ ROLE_RESPONSABLE_LEGACY = 'RESPONSABLE'
 ROLE_AGENT = 'AGENT'
 RESPONSABLE_ROLES = [ROLE_RESPONSABLE_DEPT, ROLE_RESPONSABLE_LEGACY]
 MANAGER_ROLES = [ROLE_ADMIN_ORG, ROLE_RESPONSABLE_DEPT, ROLE_RESPONSABLE_LEGACY]
+
+class FrenchPasswordChangeForm(PasswordChangeForm):
+    error_messages = {
+        **PasswordChangeForm.error_messages,
+        'password_incorrect': "Votre ancien mot de passe est incorrect.",
+        'password_mismatch': "Les deux nouveaux mots de passe ne correspondent pas.",
+    }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        labels = {
+            'old_password': 'Ancien mot de passe',
+            'new_password1': 'Nouveau mot de passe',
+            'new_password2': 'Confirmation du nouveau mot de passe',
+        }
+
+        placeholders = {
+            'old_password': 'Entrez votre ancien mot de passe',
+            'new_password1': 'Entrez votre nouveau mot de passe',
+            'new_password2': 'Confirmez votre nouveau mot de passe',
+        }
+
+        help_texts = {
+            'new_password1': (
+                "Votre mot de passe doit contenir au moins 8 caractères, "
+                "ne doit pas être trop courant et ne doit pas être entièrement numérique."
+            ),
+            'new_password2': "Saisissez à nouveau le même mot de passe pour confirmation.",
+        }
+
+        for name, field in self.fields.items():
+            field.label = labels.get(name, field.label)
+            field.help_text = help_texts.get(name, '')
+            field.widget.attrs.update({
+                'class': 'form-control rounded-3',
+                'placeholder': placeholders.get(name, ''),
+            })
 
 
 def is_superadmin(user):
@@ -149,6 +187,28 @@ def get_manageable_user_or_404(request_user, user_id):
     return get_object_or_404(manageable_users_queryset(request_user), id=user_id)
 
 
+
+def can_manage_structure(user):
+    return is_superadmin(user) or is_admin_organisation(user)
+
+
+def manageable_departments_queryset(user):
+    queryset = Departement.objects.select_related('organisation', 'responsable')
+
+    if is_superadmin(user):
+        return queryset.all()
+
+    profil = getattr(user, 'profil', None)
+    if profil and profil.role == ROLE_ADMIN_ORG:
+        return queryset.filter(organisation=profil.organisation)
+
+    return queryset.none()
+
+
+def get_manageable_department_or_404(user, department_id):
+    return get_object_or_404(manageable_departments_queryset(user), id=department_id)
+
+
 @login_required
 def create_user_by_responsable(request):
     scope = get_user_scope(request.user)
@@ -170,7 +230,7 @@ def create_user_by_responsable(request):
         date_naissance = parse_date(request.POST.get('date_naissance', '').strip()) if request.POST.get('date_naissance') else None
 
         if role not in scope['roles']:
-            messages.error(request, "Rôle invalide pour votre niveau d'accès.")
+            messages.error(request, "Role invalide pour votre niveau d'accès.")
             return redirect('create_user')
 
         if not first_name or not last_name or not email:
@@ -178,7 +238,7 @@ def create_user_by_responsable(request):
             return redirect('create_user')
 
         if User.objects.filter(username=email).exists() or User.objects.filter(email=email).exists():
-            messages.error(request, "Cet email est déjà utilisé.")
+            messages.error(request, "Cet email est déjà  utilisé.")
             return redirect('create_user')
 
         organisation = scope['forced_organisation']
@@ -250,7 +310,7 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            messages.success(request, "Connexion réussie.")
+            messages.success(request, "Connexion rÃ©ussie.")
             if hasattr(user, 'profil') and user.profil.doit_changer_mot_de_passe:
                 return redirect('change_password')
             return redirect('dashboard')
@@ -306,7 +366,7 @@ def user_management(request):
     elif is_admin_organisation(request.user):
         titre_page = "Utilisateurs de mon organisation"
     else:
-        titre_page = "Agents de mon département"
+        titre_page = "Agents de mon dÃ©partement"
 
     return render(request, 'accounts/users.html', {
         'users': page_obj.object_list,
@@ -355,7 +415,7 @@ def edit_user(request, user_id):
         is_active = request.POST.get('is_active') == 'on'
 
         if role not in scope['roles']:
-            messages.error(request, "Rôle invalide pour votre niveau d'accès.")
+            messages.error(request, "Role invalide pour votre niveau d'accès.")
             return redirect('edit_user', user_id=user_item.id)
 
         if not first_name or not last_name or not email:
@@ -438,7 +498,7 @@ def toggle_user_status(request, user_id):
 
 @login_required
 def change_user_role(request, user_id):
-    messages.warning(request, "Le changement de rôle se fait depuis la page de modification utilisateur.")
+    messages.warning(request, "Le changement de role se fait depuis la page de modification utilisateur.")
     return redirect('edit_user', user_id=user_id)
 
 
@@ -451,7 +511,7 @@ def profile(request):
 
 @login_required
 def change_password(request):
-    form = PasswordChangeForm(request.user, request.POST or None)
+    form = FrenchPasswordChangeForm(request.user, request.POST or None)
 
     if request.method == 'POST' and form.is_valid():
         user = form.save()
@@ -508,7 +568,7 @@ def departments(request):
 
     if request.method == 'POST':
         if not can_create_department:
-            messages.error(request, "Vous n'êtes pas autorisé à créer un département.")
+            messages.error(request, "Vous n'etes pas autorisé à  créer un département.")
             return redirect('departments')
 
         nom = request.POST.get('nom', '').strip()
@@ -581,7 +641,7 @@ def organisations(request):
             return redirect('organisations')
 
         if Organisation.objects.filter(nom__iexact=nom).exists():
-            messages.error(request, "Cette organisation existe déjà.")
+            messages.error(request, "Cette organisation existe déjà .")
             return redirect('organisations')
 
         Organisation.objects.create(
@@ -601,3 +661,161 @@ def organisations(request):
         'organisations': organisations_list,
         'active_page': 'organisations',
     })
+
+
+@login_required
+def edit_organisation(request, organisation_id):
+    if not is_superadmin(request.user):
+        messages.error(request, "Accès réservé au superadmin.")
+        return redirect('dashboard')
+
+    organisation = get_object_or_404(Organisation, id=organisation_id)
+
+    if request.method == 'POST':
+        nom = request.POST.get('nom', '').strip()
+        description = request.POST.get('description', '').strip()
+        adresse = request.POST.get('adresse', '').strip()
+        telephone = request.POST.get('telephone', '').strip()
+        email = request.POST.get('email', '').strip()
+
+        if not nom:
+            messages.error(request, "Le nom de l'organisation est obligatoire.")
+            return redirect('edit_organisation', organisation_id=organisation.id)
+
+        if Organisation.objects.filter(nom__iexact=nom).exclude(id=organisation.id).exists():
+            messages.error(request, "Cette organisation existe déjà.")
+            return redirect('edit_organisation', organisation_id=organisation.id)
+
+        organisation.nom = nom
+        organisation.description = description
+        organisation.adresse = adresse
+        organisation.telephone = telephone
+        organisation.email = email
+        organisation.save()
+
+        messages.success(request, "Organisation modifiée avec succès.")
+        return redirect('organisations')
+
+    return render(request, 'accounts/edit_organisation.html', {
+        'organisation': organisation,
+        'active_page': 'organisations',
+    })
+
+
+@login_required
+def delete_organisation(request, organisation_id):
+    if not is_superadmin(request.user):
+        messages.error(request, "Accès réservé au superadmin.")
+        return redirect('dashboard')
+
+    organisation = get_object_or_404(Organisation, id=organisation_id)
+
+    if request.method != 'POST':
+        return redirect('organisations')
+
+    if organisation.departements.exists() or organisation.utilisateurs.exists():
+        messages.error(
+            request,
+            "Impossible de supprimer cette organisation : elle contient encore des départements ou des utilisateurs."
+        )
+        return redirect('organisations')
+
+    organisation.delete()
+    messages.success(request, "Organisation supprimée avec succès.")
+    return redirect('organisations')
+
+
+@login_required
+def edit_department(request, department_id):
+    if not can_manage_structure(request.user):
+        messages.error(request, "Accés réservé aux administrateurs.")
+        return redirect('dashboard')
+
+    departement = get_manageable_department_or_404(request.user, department_id)
+    user_profile = getattr(request.user, 'profil', None)
+    is_super = is_superadmin(request.user)
+
+    if is_super:
+        organisations = Organisation.objects.all().order_by('nom')
+        responsables = User.objects.filter(
+            profil__role__in=RESPONSABLE_ROLES
+        ).select_related('profil', 'profil__organisation').order_by('first_name', 'last_name', 'username')
+    else:
+        organisations = Organisation.objects.filter(id=user_profile.organisation_id)
+        responsables = User.objects.filter(
+            profil__organisation=user_profile.organisation,
+            profil__role__in=RESPONSABLE_ROLES
+        ).select_related('profil', 'profil__organisation').order_by('first_name', 'last_name', 'username')
+
+    if request.method == 'POST':
+        nom = request.POST.get('nom', '').strip()
+        description = request.POST.get('description', '').strip()
+        organisation_id = request.POST.get('organisation')
+        responsable_id = request.POST.get('responsable')
+
+        if not nom:
+            messages.error(request, "Le nom du département est obligatoire.")
+            return redirect('edit_department', department_id=departement.id)
+
+        if is_super:
+            if not organisation_id:
+                messages.error(request, "Veuillez sélectionner une organisation.")
+                return redirect('edit_department', department_id=departement.id)
+            organisation = get_object_or_404(Organisation, id=organisation_id)
+        else:
+            organisation = user_profile.organisation
+            if organisation is None:
+                messages.error(request, "Votre compte n'est rattaché aucune organisation.")
+                return redirect('departments')
+
+        if Departement.objects.filter(organisation=organisation, nom__iexact=nom).exclude(id=departement.id).exists():
+            messages.error(request, "Ce département existe déjà dans cette organisation.")
+            return redirect('edit_department', department_id=departement.id)
+
+        responsable = None
+        if responsable_id:
+            responsable = get_object_or_404(
+                responsables,
+                id=responsable_id,
+                profil__organisation=organisation,
+            )
+
+        departement.nom = nom
+        departement.description = description
+        departement.organisation = organisation
+        departement.responsable = responsable
+        departement.save()
+
+        messages.success(request, "Département modifié avec succès.")
+        return redirect('departments')
+
+    return render(request, 'accounts/edit_department.html', {
+        'departement': departement,
+        'organisations': organisations,
+        'responsables': responsables,
+        'is_superadmin': is_super,
+        'active_page': 'departements',
+    })
+
+
+@login_required
+def delete_department(request, department_id):
+    if not can_manage_structure(request.user):
+        messages.error(request, "Accès réservé aux administrateurs.")
+        return redirect('dashboard')
+
+    departement = get_manageable_department_or_404(request.user, department_id)
+
+    if request.method != 'POST':
+        return redirect('departments')
+
+    if departement.agents.exists() or departement.documents_autorises.exists():
+        messages.error(
+            request,
+            "Impossible de supprimer ce d?partement : il contient encore des agents ou des documents rattachés."
+        )
+        return redirect('departments')
+
+    departement.delete()
+    messages.success(request, "Département supprimé avec succès.")
+    return redirect('departments')

@@ -537,6 +537,7 @@
             </div>
         </div>
     </div>
+    {% if request.user.is_superuser or request.user.profil.role != "AGENT" %}
 
     <div class="menu-section"><span>Sécurité</span></div>
 
@@ -576,6 +577,7 @@
     </div>
 
     {% endwith %}
+    {% endif %}
 
 </nav>
 

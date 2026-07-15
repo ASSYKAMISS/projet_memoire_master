@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+
+{% block title %}Modifier le département{% endblock %}
+{% block page_title %}Modifier le département{% endblock %}
+{% block page_subtitle %}Mise à jour des informations du département{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card p-4">
+            <form method="post">
+                {% csrf_token %}
+
+                {% if is_superadmin %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Organisation</label>
+                    <select name="organisation" class="form-select" required>
+                        <option value="">Sélectionner une organisation</option>
+                        {% for organisation in organisations %}
+                            <option value="{{ organisation.id }}" {% if departement.organisation_id == organisation.id %}selected{% endif %}>
+                                {{ organisation.nom }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nom du département</label>
+                    <input type="text" name="nom" class="form-control" value="{{ departement.nom }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Responsable</label>
+                    <select name="responsable" class="form-select">
+                        <option value="">Aucun responsable</option>
+                        {% for responsable in responsables %}
+                            <option value="{{ responsable.id }}" {% if departement.responsable_id == responsable.id %}selected{% endif %}>
+                                {{ responsable.first_name|default:responsable.username }} {{ responsable.last_name }}
+                                {% if responsable.profil.organisation %}- {{ responsable.profil.organisation.nom }}{% endif %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Description</label>
+                    <textarea name="description" rows="4" class="form-control">{{ departement.description }}</textarea>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a href="{% url 'departments' %}" class="btn btn-outline-secondary">Annuler</a>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

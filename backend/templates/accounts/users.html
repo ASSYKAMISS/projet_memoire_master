@@ -95,13 +95,29 @@
                         {% if u.is_active %}<span class="status active">Actif</span>{% else %}<span class="status inactive">Désactivé</span>{% endif %}
                     </td>
                     <td class="text-end">
-                        <div class="btn-group btn-group-sm">
-                            <a href="{% url 'user_detail' u.id %}" class="btn btn-outline-primary">Voir</a>
-                            <a href="{% url 'edit_user' u.id %}" class="btn btn-outline-secondary">Modifier</a>
-                            <a href="{% url 'toggle_user_status' u.id %}" class="btn {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
-                                {% if u.is_active %}Désactiver{% else %}Activer{% endif %}
-                            </a>
-                        </div>
+                        <div class="btn-group btn-group-sm action-icons">
+    <a href="{% url 'user_detail' u.id %}"
+       class="btn btn-outline-primary"
+       title="Voir les détails">
+        <i class="bi bi-eye"></i>
+    </a>
+
+    <a href="{% url 'edit_user' u.id %}"
+       class="btn btn-outline-secondary"
+       title="Modifier">
+        <i class="bi bi-pencil-square"></i>
+    </a>
+
+    <a href="{% url 'toggle_user_status' u.id %}"
+       class="btn {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}"
+       title="{% if u.is_active %}Désactiver{% else %}Activer{% endif %}">
+        {% if u.is_active %}
+            <i class="bi bi-person-x"></i>
+        {% else %}
+            <i class="bi bi-person-check"></i>
+        {% endif %}
+    </a>
+</div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -138,6 +154,18 @@
 .role-badge { background: #EAF2FF; color: #0057D9; }
 .status.active { background: #DCFCE7; color: #15803D; }
 .status.inactive { background: #FEE2E2; color: #B91C1C; }
+.action-icons .btn {
+    width: 34px;
+    height: 34px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+}
+
+.action-icons i {
+    font-size: 1rem;
+}
 </style>
 
 {% endblock %}

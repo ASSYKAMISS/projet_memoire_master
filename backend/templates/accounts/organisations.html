@@ -58,6 +58,7 @@
                             <th>Email</th>
                             <th>Téléphone</th>
                             <th>Date création</th>
+                            <th class="text-end">Actions</th>
                         </tr>
                     </thead>
 
@@ -68,10 +69,31 @@
                                 <td>{{ organisation.email|default:"-" }}</td>
                                 <td>{{ organisation.telephone|default:"-" }}</td>
                                 <td>{{ organisation.date_creation|date:"d/m/Y" }}</td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{% url 'edit_organisation' organisation.id %}"
+                                           class="btn btn-outline-secondary"
+                                           title="Modifier">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+
+                                        <form method="post"
+                                              action="{% url 'delete_organisation' organisation.id %}"
+                                              class="d-inline"
+                                              onsubmit="return confirm('Supprimer cette organisation ?');">
+                                            {% csrf_token %}
+                                            <button type="submit"
+                                                    class="btn btn-outline-danger"
+                                                    title="Supprimer">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                         {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">
+                                <td colspan="5" class="text-center text-muted py-4">
                                     Aucune organisation enregistrée.
                                 </td>
                             </tr>

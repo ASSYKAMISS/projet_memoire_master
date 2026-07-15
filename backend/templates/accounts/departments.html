@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Départements - ChainSign AI{% endblock %}
+{% block title %}D?partements - ChainSign AI{% endblock %}
 {% block page_title %}Départements{% endblock %}
 {% block page_subtitle %}Organisation des départements et responsables{% endblock %}
 
@@ -55,7 +55,7 @@
 
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Description</label>
-                    <textarea name="description" rows="4" class="form-control custom-input" placeholder="Décrivez brièvement le rôle du département"></textarea>
+                    <textarea name="description" rows="4" class="form-control custom-input" placeholder="D?crivez bri?vement le r?le du d?partement"></textarea>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-100 btn-create">
@@ -78,7 +78,7 @@
                     <p class="text-muted mb-0">Liste des départements selon votre périmètre.</p>
                 </div>
 
-                <span class="count-badge">{{ departements|length }} département(s)</span>
+                <span class="count-badge">{{ departements|length }} d?partement(s)</span>
             </div>
 
             {% if departements %}
@@ -91,6 +91,9 @@
                             <th>Responsable</th>
                             <th>Description</th>
                             <th>Date création</th>
+                            {% if can_create_department %}
+                                <th class="text-end">Actions</th>
+                            {% endif %}
                         </tr>
                     </thead>
                     <tbody>
@@ -127,6 +130,29 @@
                                 {% endif %}
                             </td>
                             <td>{{ departement.date_creation|date:"d/m/Y" }}</td>
+                            {% if can_create_department %}
+                            <td class="text-end">
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'edit_department' departement.id %}"
+                                       class="btn btn-outline-secondary"
+                                       title="Modifier">
+                                        <i class="bi bi-pencil-square"></i>
+                                    </a>
+
+                                    <form method="post"
+                                          action="{% url 'delete_department' departement.id %}"
+                                          class="d-inline"
+                                          onsubmit="return confirm('Supprimer ce département ?');">
+                                        {% csrf_token %}
+                                        <button type="submit"
+                                                class="btn btn-outline-danger"
+                                                title="Supprimer">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                            {% endif %}
                         </tr>
                         {% endfor %}
                     </tbody>

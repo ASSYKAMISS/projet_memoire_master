@@ -6,34 +6,62 @@ from django.contrib import messages
 from django.shortcuts import get_object_or_404, redirect
 from web3 import Web3
 from django.conf import settings
+from django.db.models import Q
 import json
 from pathlib import Path
 
 from documents.services.hash_service import calculer_sha256
 
 
-def is_responsable(user):
-    return hasattr(user, 'profil') and user.profil.role == 'RESPONSABLE'
+ROLE_ADMIN_ORG = 'ADMIN_ORGANISATION'
+ROLE_RESPONSABLE_DEPT = 'RESPONSABLE_DEPARTEMENT'
+ROLE_RESPONSABLE_LEGACY = 'RESPONSABLE'
+RESPONSABLE_ROLES = [ROLE_RESPONSABLE_DEPT, ROLE_RESPONSABLE_LEGACY]
+
+
+def user_profile(user):
+    return getattr(user, 'profil', None)
+
+
+def audits_accessibles_queryset(user):
+    audits = AuditBlockchain.objects.all()
+
+    if user.is_superuser:
+        return audits
+
+    profil = user_profile(user)
+    if profil is None:
+        return audits.none()
+
+    if profil.role == ROLE_ADMIN_ORG:
+        return audits.filter(
+            Q(document__utilisateur__profil__organisation=profil.organisation)
+            | Q(document__signatures__utilisateur__profil__organisation=profil.organisation)
+        ).distinct()
+
+    if profil.role in RESPONSABLE_ROLES:
+        return audits.filter(
+            Q(document__utilisateur=user)
+            | Q(document__signatures__utilisateur=user)
+            | Q(document__utilisateur__profil__departement=profil.departement)
+            | Q(document__signatures__utilisateur__profil__departement=profil.departement)
+        ).distinct()
+
+    return audits.filter(
+        Q(document__utilisateur=user)
+        | Q(document__signatures__utilisateur=user)
+    ).distinct()
 
 
 @login_required
 def blockchain_audit(request):
-    if request.user.is_superuser:
-        audits = AuditBlockchain.objects.all()
-
-    elif is_responsable(request.user):
-        audits = AuditBlockchain.objects.filter(
-            document__utilisateur=request.user
-        )
-
-    else:
-        audits = AuditBlockchain.objects.filter(
-            document__signatures__utilisateur=request.user
-        ).distinct()
+    audits = audits_accessibles_queryset(request.user)
 
     audits = audits.select_related(
         'document',
-        'document__utilisateur'
+        'document__utilisateur',
+        'document__utilisateur__profil',
+        'document__utilisateur__profil__organisation',
     ).order_by('-date_enregistrement')
 
     total_audits = audits.count()
@@ -55,21 +83,7 @@ def blockchain_audit(request):
 
 @login_required
 def verify_blockchain_audit(request, audit_id):
-    audit = get_object_or_404(AuditBlockchain, id=audit_id)
-
-    if not request.user.is_superuser:
-        if is_responsable(request.user):
-            if audit.document.utilisateur != request.user:
-                messages.error(request, "Vous n'avez pas accès à cet audit.")
-                return redirect('blockchain_audit')
-        else:
-            is_signer = audit.document.signatures.filter(
-                utilisateur=request.user
-            ).exists()
-
-            if not is_signer:
-                messages.error(request, "Vous n'avez pas accès à cet audit.")
-                return redirect('blockchain_audit')
+    audit = get_object_or_404(audits_accessibles_queryset(request.user), id=audit_id)
 
     try:
         web3 = Web3(Web3.HTTPProvider(settings.BLOCKCHAIN_RPC_URL))

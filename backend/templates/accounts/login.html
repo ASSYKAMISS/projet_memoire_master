@@ -1,4 +1,4 @@
-{% extends 'base_public.html' %}
+﻿{% extends 'base_public.html' %}
 
 <nav class="navbar navbar-expand-lg navbar-custom">
 
@@ -105,25 +105,25 @@
                                 </p>
 
                                 <p class="description">
-                                    Plateforme de signature électronique avec traçabilité blockchain,
-                                    cryptographie SHA-256/ECDSA et analyse intelligente des risques.
-                                </p>
+    Signez, suivez et vÃ©rifiez vos documents importants en toute confiance,
+    avec un processus simple, sécurisé et adapté à votre organisation.
+</p>
                             </div>
 
                             <div class="security-list">
-                                <div>
-                                    <i class="bi bi-check-circle-fill"></i>
-                                    Signature numérique ECDSA
-                                </div>
-                                <div>
-                                    <i class="bi bi-check-circle-fill"></i>
-                                    Audit blockchain local
-                                </div>
-                                <div>
-                                    <i class="bi bi-check-circle-fill"></i>
-                                    Score de risque IA
-                                </div>
-                            </div>
+    <div>
+        <i class="bi bi-check-circle-fill"></i>
+        Documents protégés et vérifiables
+    </div>
+    <div>
+        <i class="bi bi-check-circle-fill"></i>
+        Suivi clair de chaque signature
+    </div>
+    <div>
+        <i class="bi bi-check-circle-fill"></i>
+        DÃ©tection des signatures inhabituelles
+    </div>
+</div>
 
                         </div>
 
@@ -160,20 +160,29 @@
                                     </div>
                                 </div>
 
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold">
-                                        Mot de passe
-                                    </label>
+                      <div class="mb-3">
+    <label class="form-label fw-semibold">
+        Mot de passe
+    </label>
 
-                                    <div class="input-group-custom">
-                                        <i class="bi bi-key"></i>
-                                        <input type="password"
-                                               name="password"
-                                               class="form-control"
-                                               placeholder="Votre mot de passe"
-                                               required>
-                                    </div>
-                                </div>
+    <div class="input-group-custom password-field">
+        <i class="bi bi-key"></i>
+
+        <input type="password"
+               name="password"
+               id="passwordInput"
+               class="form-control"
+               placeholder="Votre mot de passe"
+               required>
+
+        <button type="button"
+                class="password-toggle"
+                onclick="togglePassword()"
+                aria-label="Afficher ou masquer le mot de passe">
+            <i class="bi bi-eye" id="passwordToggleIcon"></i>
+        </button>
+    </div>
+</div>
 
                                 <div class="d-flex justify-content-between align-items-center mb-4">
                                     <label class="small text-muted">
@@ -409,6 +418,74 @@
         padding: 45px 28px;
     }
 }
+.input-group-custom.password-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-group-custom.password-field .form-control {
+    padding-left: 46px;
+    padding-right: 56px;
+}
+
+.input-group-custom.password-field > .bi-key {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 2;
+    color: #64748B;
+}
+
+.password-toggle {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 3;
+    width: 34px;
+    height: 34px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+    color: #64748B;
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.password-toggle:hover {
+    background: #EEF5FF;
+    color: #0057D9;
+}
+
+.password-toggle i {
+    position: static;
+    transform: none;
+    color: inherit;
+    pointer-events: none;
+}
 </style>
+<script>
+function togglePassword() {
+    const passwordInput = document.getElementById("passwordInput");
+    const icon = document.getElementById("passwordToggleIcon");
+
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+        icon.classList.remove("bi-eye");
+        icon.classList.add("bi-eye-slash");
+    } else {
+        passwordInput.type = "password";
+        icon.classList.remove("bi-eye-slash");
+        icon.classList.add("bi-eye");
+    }
+}
+</script>
+
 
 {% endblock %}

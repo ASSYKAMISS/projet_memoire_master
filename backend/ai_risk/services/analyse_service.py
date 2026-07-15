@@ -1,4 +1,4 @@
-﻿from ai_risk.models import AnalyseSignatureIA
+from ai_risk.models import AnalyseSignatureIA
 from ai_risk.services.imagehash_service import analyser_signature_imagehash
 
 
